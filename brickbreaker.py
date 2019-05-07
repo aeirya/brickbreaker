@@ -22,24 +22,22 @@ class Ball:
 
 
 import tkinter
-# from PIL import ImageTk, Image
-from tkinter import Image
-tkinter.PhotoImage
+from tkinter import ttk
+# from tkinter import Image
+
 class Arrow():
-    def __init__(self,window,x):
-        img = Image.open('arrow.png')
-        arrowImg = ImageTk.PhotoImage(img)
-        arrow = x.Label(window, image = arrowImg)
-        arrow.grid(row = 2, column=2)
+    def __init__(self,window):
+        photo = tkinter.PhotoImage(file = "arrow.png")
+        arrow = tkinter.ttk.Label(window, image = photo)
+        label = tkinter.ttk.Label(image=photo)
+        label.image = photo # keep a reference!
+        label.grid(row = 2, column=2)
+        label.pack()
 
 def readyInterface():
-    from tkinter import ttk as x
     window = tkinter.Tk()
-    # x = tkinter.ttk
-    arrow = Arrow(window,x)
-    
-    # quit_button = x.Button(window, text="Quit")
-    # quit_button.grid(row=2, column=1)
+    arrow = Arrow(window)
+    ``
     return window
 
 def readyEvents(window):
