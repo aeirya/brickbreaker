@@ -1,7 +1,8 @@
 print("((BREAK BREAKER))\nMade by: Me")
 
 import turtle
-import samples.keyPress as keyPress
+# import samples.keyPress as keyPress
+# from keyManager import KeyEvent, KeyManager
 
 class Vector:
     def __init__(self, x=0,y=0):
@@ -86,8 +87,7 @@ class Game:
 
         # Game.wait(1/Game.FRAMERATE)
         
-        
-
+    
         print("refresh")
         # thread.start()
 
@@ -110,20 +110,26 @@ class UI:
         # self.window.delay(0)  
         # self.window.onkey(f, "Right")
         self.arrow = Arrow()
+        win.delay(1)
         # window.onkey(tiltLeft, "Left")
         self.setKeyEvents()
         win.listen()
-        win.exitonclick()
+        # win.exitonclick()
+        win.mainloop()
         # input("Press Enter to Exit")
+        # threading.Thread(target = KeyManager.start)
+
 
     def setKeyEvents(self):
         win = self.window
-        win.onkey(self.arrow.tiltLeft, "Left")
-        win.onkey(self.arrow.tiltRight, "Right")
-        # win.on
+        win.onkeypress(self.arrow.tiltLeft, "Left")
+        win.onkeypress(self.arrow.tiltRight, "Right")
+        # win.onkeyrelease(self.arrow.stopTilting, "Left")
+        # win.onkeyrelease(self.arrow.stopTilting, "Right")
+
 
 class Direction:
-    Left, Right = 0,1
+    Left, Right, NONE = 0,1,2
 
 # turtle.speed(10)
 # turtle.delay(0)
@@ -135,7 +141,11 @@ class Arrow:
     angV = 12 #angular velocity
     radius = 30
     angle = 0 #angle made from x axis
-    
+    tiltDirection = Direction.NONE
+    # tilting = False
+    tilter = None
+    isTilting = False
+
     def __init__(self):
         super().__init__()
         self.turtle = turtle.Turtle()
@@ -155,8 +165,10 @@ class Arrow:
         ted.forward(radius)
         ted.resizemode("user")
         ted.shapesize(.5, 2,1)
-
-    def tilt(self, dir):
+        
+    def tilt(self, dir= None):
+        if dir == None:
+            dir = self.tiltDirection
         from math import cos,sin, radians
         i = 1 if dir == Direction.Left else -1
         self.angle += i* self.angV
@@ -165,11 +177,28 @@ class Arrow:
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector(cos(teta), sin(teta))*self.radius).tupple() ) 
         ted.tilt(i* self.angV)
 
+    def startTilting(self):     
+        # if self.tilter == None:
+        if not self.isTilting:
+            self.isTilting = True
+            while self.isTilting:
+                self.tilter = threading.Timer(0.1, self.tilt) 
+                self.tilter.start()
+
+    def stopTilting(self):
+        if self.tilter != None :
+            self.tilter.cancel()
+        if self.isTilting:
+            self.isTilting = False
+            print("stopping tilting ;/")
+
     def tiltLeft(self):
-        self.tilt(Direction.Left)
+        self.tiltDirection = Direction.Left
+        self.startTilting()
 
     def tiltRight(self):
-        self.tilt(Direction.Right)
+        self.tiltDirection = Direction.Right
+        self.startTilting()
 
 class GameObject:
     location = Vector(0,0)
