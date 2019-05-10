@@ -1,8 +1,6 @@
 print("((BREAK BREAKER))\nMade by: Me")
 
 import turtle
-# import samples.keyPress as keyPress
-# from keyManager import KeyEvent, KeyManager
 
 class Vector:
     def __init__(self, x=0,y=0):
@@ -32,7 +30,8 @@ def rc():
     print("fuck you!")
 
 import time
-import datetime
+# import datetime
+from datetime import datetime, timedelta
 import threading
 
 class Game:
@@ -82,35 +81,14 @@ class Game:
             t+= 0.001
             time.sleep(0.001)
 
-    # updateTimerStacks = 1
-    updateTimerStacks = []
-
     def Update(self):
-        for gameObject in self.gameObjects:
-            if gameObject != None:
-                gameObject.move()
-        # Game.wait(1/Game.FRAMERATE)
-        
-        print("refresh")
-        # if 0 <= self.updateTimerStacks < 1:
-        timer = threading.Timer(1/Game.FRAMERATE, self.Update)
-        timer.name = "Next Update"
-
-        # upt = self.updateTimerStacks
-
-        # if len(upt)==0:
-        #     upt.append(timer)
-        #     timer.start()
-        # while len(upt) > 1:
-        #     upt[0].cancel()
-        #     del upt[0]
-        timer.start()
-
-def f():
-    print("Fucl yuui'")
+        self.ui.lastCallTime = datetime.now()
+        self.ui.Update()
 
 class UI:
     SCREEN_WIDTH, SCREEN_HEIGHT = 500, 750
+    deltaTime = 1/Game.FRAMERATE
+    
     def __init__(self):
         super().__init__()
         from turtle import Screen
@@ -147,8 +125,32 @@ class UI:
         # win.mainloop()
         # input("Press Enter to Exit")
         # threading.Thread(target = KeyManager.start)
-    # def wait(self, window):
-    #     window.mainloop()
+
+    # updateTimerStacks = 1
+    updateTimerStacks = []
+
+    def Update(self):
+        # print("refresh")
+        self.deltaTime = (datetime.now() - self.lastCallTime).total_seconds()
+        # print(self.deltaTime - 1/Game.FRAMERATE)
+
+        for gameObject in game.gameObjects:
+            if gameObject != None:
+                gameObject.move()
+        
+        timer = threading.Timer(1/Game.FRAMERATE, self.Update)
+        timer.name = "Next Update"
+
+        # upt = self.updateTimerStacks
+        # if len(upt)==0:
+        #     upt.append(timer)
+        #     timer.start()
+        # while len(upt) > 1:
+        #     upt[0].cancel()
+        #     del upt[0]
+        self.lastCallTime = datetime.now()
+        timer.start()
+
     def clear(self):
         win = self.window
         win.clear()
@@ -159,9 +161,7 @@ class UI:
         win.onkeypress(self.arrow.tiltLeft, "Left")
         win.onkeypress(self.arrow.tiltRight, "Right")
         win.onkeyrelease(self.arrow.stopTilting, "Left")
-        win.onkeyrelease(self.arrow.stopTilting, "Right")    
-        # win.onkeypress(game.ui.ball.move, 'm')   
-    
+        win.onkeyrelease(self.arrow.stopTilting, "Right")
 
 class Direction:
     Left, Right, NONE = 0,1,2
@@ -182,7 +182,7 @@ class Arrow:
     isTilting = False
     # tiltQueue = []
     # angV = Game.FRAMERATE/10
-    angV = 3
+    angV = 3 * Game.FRAMERATE
 
     def __init__(self):
         super().__init__()
@@ -210,11 +210,20 @@ class Arrow:
 
         from math import cos,sin, radians
         i = 1 if dir == Direction.Left else -1
-        self.angle += i* self.angV
+        deltaTeta = i* self.angV * game.ui.deltaTime
+        if 0 <= self.angle + deltaTeta <= 180:
+            self.angle += deltaTeta
+        else:
+            deltaTeta = 0
+        # if self.angle < 0:
+        #     self.angle = 0
+        # elif self.angle > 180:
+        #     self.angle = 180
+
         ted = self.turtle
         teta = radians( self.angle )
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector(cos(teta), sin(teta))*self.radius).tupple() ) 
-        ted.tilt(i* self.angV)
+        ted.tilt( deltaTeta )
 
         if self.tilter!=None:
             self.tilter.cancel()
@@ -256,7 +265,7 @@ class GameObject:
     # velocity = Vector(0,0)
     def __init__(self, vector= (0,0), initialLocation=(0,0), movable = False):
         self.movability = movable
-        self.velocity = Vector.tuppleInit(vector)
+        self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
         self.location = Vector.tuppleInit(initialLocation)
         
         self.generator = game.ui.pen.clone()
@@ -269,14 +278,14 @@ class GameObject:
         pass
 
     def move(self):
-        self.location += self.velocity
+        self.location += self.velocity * game.ui.deltaTime
         self.checkCollision()
 
         pen = self.generator
         pen.clear()
         pen.goto(self.location.tupple())
         
-        print("move of gameobject class called")
+        # print("move of gameobject class called")
     
 class Ball(GameObject):
     RADIUS = 10
@@ -284,12 +293,12 @@ class Ball(GameObject):
         super().__init__(vector, initialLocation)
         self.draw()
         
-    def draw(self):
+    def draw(self, fill = False):
         pen = self.generator
         pen.down()
-        # pen.begin_fill()
+        if fill: pen.begin_fill()
         pen.circle(self.RADIUS)
-        # pen.end_fill()
+        if fill: pen.end_fill()
         pen.up()
 
     def move(self):
@@ -298,7 +307,7 @@ class Ball(GameObject):
         # game.ui.window.clear("red")
         # game.ui.clear()
         self.draw()
-        print("moved ball")
+        # print("moved ball")
         
         # print(pen)
 
@@ -314,5 +323,6 @@ class Ball(GameObject):
 
 game = Game()
 print("Started Game ^^")
+
 game.ui.window.mainloop()
 # window.exitonclick()
