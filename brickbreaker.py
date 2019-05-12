@@ -59,11 +59,16 @@ class Game:
         # self.Update()
 
     def InitializeUI(self):
-        self.genBall()
+        # self.genBall()
+        for _ in range(2):
+            self.genBall()
+
 
     def genBall(self):
         print("generating a ball")
-        self.gameObjects.append(Ball((10,10), (0,0)))
+        import random
+        # self.gameObjects.append(Ball((10,10), (0,0)))
+        self.gameObjects.append(Ball((2*random.uniform(1,10),2*random.uniform(0,10)), (random.uniform(-20,20),0)))
 
     @staticmethod
     def wait(secs):
@@ -274,12 +279,11 @@ class GameObject:
         pen.goto(initialLocation)
         
 
-    def checkCollision(self):
-        pass
+    # def checkCollision(self):
+    #     pass
 
     def move(self):
         self.location += self.velocity * game.ui.deltaTime
-        self.checkCollision()
 
         pen = self.generator
         pen.clear()
@@ -301,11 +305,15 @@ class Ball(GameObject):
         if fill: pen.end_fill()
         pen.up()
 
+    # def checkCollision(self):
+        
+
     def move(self):
         super().move()
         # self.location += self.velocity
         # game.ui.window.clear("red")
         # game.ui.clear()
+        # self.checkCollision()
         self.draw()
         # print("moved ball")
         
