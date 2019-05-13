@@ -7,13 +7,25 @@ class Vector:
         self.x = x
         self.y = y
         self.r = (x,y)
+        from math import sqrt, atan2
+        self.size = sqrt(x**2+y**2)
+        self.teta = atan2(y,x)
 
     @staticmethod
     def tuppleInit(r):
         x,y = r
         v = Vector(x,y)
         return v
-        
+    @staticmethod 
+    def polarInit(r,t):
+        v = Vector()
+        v.size = r
+        v.teta = t
+        from math import cos,sin
+        v.x = r*cos(t)
+        v.y = r*sin(t)
+        return v
+
     def __add__(self, v):
         return __class__(self.x + v.x, self.y + v.y)
     
@@ -26,11 +38,7 @@ class Vector:
     def tupple(self):
         return self.x, self.y
 
-def rc():
-    print("fuck you!")
-
 import time
-# import datetime
 from datetime import datetime, timedelta
 import threading
 
@@ -46,29 +54,21 @@ class Game:
         uiThread = threading.Timer(0.2, self.InitializeUI)
         uiThread.start()
 
-        # updateThread =threading.Thread(target=self.Update)
         updateThread = threading.Timer(0.3, self.Update)
         updateThread.name = "Update Thread"
         updateThread.start()
-        # self.InitializeUI()
         
-        # self.Update()
-        # t1 =threading.Thread(target=self.InitializeUI)
-        
-        # t1.start()
-        # self.Update()
-
     def InitializeUI(self):
-        # self.genBall()
-        for _ in range(2):
+        for _ in range(3):
             self.genBall()
 
 
     def genBall(self):
         print("generating a ball")
         import random
-        # self.gameObjects.append(Ball((10,10), (0,0)))
-        self.gameObjects.append(Ball((2*random.uniform(1,10),2*random.uniform(0,10)), (random.uniform(-20,20),0)))
+        startAngle = random.uniform(0,90)
+        velocity = random.uniform(0,1)
+        self.gameObjects.append(Ball( Vector.polarInit(velocity,startAngle).tupple() , (random.uniform(-25,25),0) ))
 
     @staticmethod
     def wait(secs):
@@ -97,22 +97,16 @@ class UI:
     def __init__(self):
         super().__init__()
         from turtle import Screen
-        # self.window = Screen()
         self.window =Screen()
-        
         win = self.window
+        win.delay(1)
+
         win.bgcolor("dark grey")
         win.setup(0,0)
-        # win.clear()
         win.title("Another Brick Breaker Game :))")
-        # self.window.delay(0)  
-        # self.window.onkey(f, "Right")
         self.arrow = Arrow()
         win.setup(UI.SCREEN_WIDTH*1.5, UI.SCREEN_HEIGHT*1.5) 
-        win.screensize(canvwidth=UI.SCREEN_WIDTH, canvheight=UI.SCREEN_HEIGHT)     
-        # win.delay(100000)
-        # win.tracer( n=1000 )
-        # window.onkey(tiltLeft, "Left")
+        win.screensize(canvwidth=UI.SCREEN_WIDTH, canvheight=UI.SCREEN_HEIGHT)
         self.setKeyEvents()
         win.listen()
 
@@ -121,38 +115,24 @@ class UI:
         pen.up()
         pen.speed(0)
         pen.hideturtle()
-        # win.exitonclick()
-        # thread = threading.Thread(target = self.wait, args = win)
-        # thread = threading.Timer(0.1, win.mainloop)
-        # thread.start()
-        # time.sleep(3)
-        
-        # win.mainloop()
-        # input("Press Enter to Exit")
-        # threading.Thread(target = KeyManager.start)
 
-    # updateTimerStacks = 1
     updateTimerStacks = []
 
     def Update(self):
-        # print("refresh")
         self.deltaTime = (datetime.now() - self.lastCallTime).total_seconds()
-        # print(self.deltaTime - 1/Game.FRAMERATE)
 
         for gameObject in game.gameObjects:
             if gameObject != None:
-                gameObject.move()
+                if gameObject.queue == False:
+                    t = threading.Thread(target = gameObject.move)
+                    t.name = "Turtle Move"
+                    gameObject.queue = True
+                    t.start()
+                # gameObject.move()
         
         timer = threading.Timer(1/Game.FRAMERATE, self.Update)
         timer.name = "Next Update"
 
-        # upt = self.updateTimerStacks
-        # if len(upt)==0:
-        #     upt.append(timer)
-        #     timer.start()
-        # while len(upt) > 1:
-        #     upt[0].cancel()
-        #     del upt[0]
         self.lastCallTime = datetime.now()
         timer.start()
 
@@ -169,29 +149,18 @@ class UI:
         win.onkeyrelease(self.arrow.stopTilting, "Right")
 
 class Direction:
-    Left, Right, NONE = 0,1,2
-
-# turtle.speed(10)
-# turtle.delay(0)
-# turtle.tracer(0, 0)
-#no use =/
+    Left, Right, NONE = 1,-1,0
 
 class Arrow:
-
-    # angV = 3 #angular velocity
     radius = 30
     angle = 0 #angle made from x axis
     tiltDirection = Direction.NONE
-    # tilting = False
     tilter = None
     isTilting = False
-    # tiltQueue = []
-    # angV = Game.FRAMERATE/10
     angV = 3 * Game.FRAMERATE
 
     def __init__(self):
         super().__init__()
-        # self.angV = Game.FRAMERATE/10
         self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT/2))
         self.turtle = turtle.Turtle()
         self.draw()
@@ -209,42 +178,32 @@ class Arrow:
         ted.shapesize(.5, 2,1)   
     
     def tilt(self):
-        dir = self.tiltDirection
-        if dir == Direction.NONE:
+        i = self.tiltDirection
+        if i == Direction.NONE:
             return
-
         from math import cos,sin, radians
-        i = 1 if dir == Direction.Left else -1
         deltaTeta = i* self.angV * game.ui.deltaTime
         if 0 <= self.angle + deltaTeta <= 180:
             self.angle += deltaTeta
         else:
-            deltaTeta = 0
-        # if self.angle < 0:
-        #     self.angle = 0
-        # elif self.angle > 180:
-        #     self.angle = 180
+            # deltaTeta = 0
+            return
 
         ted = self.turtle
         teta = radians( self.angle )
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector(cos(teta), sin(teta))*self.radius).tupple() ) 
         ted.tilt( deltaTeta )
 
-        if self.tilter!=None:
-            self.tilter.cancel()
-
+        # if self.tilter!=None:
+        #     self.tilter.cancel()
         self.tilter = threading.Timer(1/Game.FRAMERATE, self.tilt)
-        # self.tiltQueue.append(self.tilter) 
         self.tilter.name = "Tilt Timer"
         self.tilter.start()
 
-
     def startTilting(self):     
-        # if self.tilter == None:
         if not self.isTilting:
             self.isTilting = True
             self.tilt()
-        
 
     def stopTilting(self):
         if self.isTilting:
@@ -252,12 +211,8 @@ class Arrow:
                 self.tilter.cancel()
             self.isTilting = False
             self.tiltDirection = Direction.NONE
-            # print("stopping tilting ;/")
 
     def tiltLeft(self):
-        # if self.tiltDirection != Direction.Left:
-        #     if self.isTilting != None:
-        #         self.tilter.cancel()
         self.tiltDirection = Direction.Left
         self.startTilting()
 
@@ -266,31 +221,26 @@ class Arrow:
         self.startTilting()
 
 class GameObject:
-    # location = Vector(0,0)
-    # velocity = Vector(0,0)
     def __init__(self, vector= (0,0), initialLocation=(0,0), movable = False):
         self.movability = movable
         self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
         self.location = Vector.tuppleInit(initialLocation)
-        
-        self.generator = game.ui.pen.clone()
-        pen = self.generator
-        # pen.up()
-        pen.goto(initialLocation)
-        
 
-    # def checkCollision(self):
-    #     pass
+        self.object = turtle.Turtle()
+        self.object.left(self.velocity.teta)
+
+        self.queue = False
+        # self.generator = game.ui.pen.clone()
+        # pen = self.generator
+        # pen.goto(initialLocation)
 
     def move(self):
-        self.location += self.velocity * game.ui.deltaTime
+        # self.location += self.velocity * game.ui.deltaTime
+        pass
+        # pen = self.generator
+        # pen.clear()
+        # pen.goto(self.location.tupple())
 
-        pen = self.generator
-        pen.clear()
-        pen.goto(self.location.tupple())
-        
-        # print("move of gameobject class called")
-    
 class Ball(GameObject):
     RADIUS = 10
     def __init__(self, vector = (0,0), initialLocation = (0,0)):
@@ -298,39 +248,21 @@ class Ball(GameObject):
         self.draw()
         
     def draw(self, fill = False):
-        pen = self.generator
-        pen.down()
-        if fill: pen.begin_fill()
-        pen.circle(self.RADIUS)
-        if fill: pen.end_fill()
-        pen.up()
-
-    # def checkCollision(self):
-        
+        # ted.resizemode("user")
+        # ted.shapesize(1, 1,0) 
+        ted = self.object
+        ted.turtlesize(0.7,0.7)
+        ted.shape('circle')
+        ted.up()
 
     def move(self):
         super().move()
-        # self.location += self.velocity
-        # game.ui.window.clear("red")
-        # game.ui.clear()
-        # self.checkCollision()
-        self.draw()
-        # print("moved ball")
-        
-        # print(pen)
-
-        # pen.color("dark grey")
-        # pen.pensize(3)
-        # self.draw()
-        # pen.pensize(1)
-        # pen.color("black")
-
-        # turtle.clear()
-
-        # turtle.Turtle().
+        # self.object.tilt(30)
+        # self.object.forward(10)
+        self.object.forward(self.velocity.size)
+        self.queue = False
 
 game = Game()
 print("Started Game ^^")
 
 game.ui.window.mainloop()
-# window.exitonclick()
