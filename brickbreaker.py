@@ -7,9 +7,9 @@ class Vector:
         self.x = x
         self.y = y
         self.r = (x,y)
-        from math import sqrt, atan2
+        from math import sqrt, atan2, degrees
         self.size = sqrt(x**2+y**2)
-        self.teta = atan2(y,x)
+        self.teta = (atan2(y,x))
 
     @staticmethod
     def tuppleInit(r):
@@ -21,7 +21,9 @@ class Vector:
         v = Vector()
         v.size = r
         v.teta = t
-        from math import cos,sin
+        # print("teta is",t)
+        from math import cos,sin,radians
+        t = radians(t)
         v.x = r*cos(t)
         v.y = r*sin(t)
         return v
@@ -61,8 +63,9 @@ class Game:
     def InitializeUI(self):
         for _ in range(3):
             self.genBall()
-
-
+        Brick((UI.SCREEN_WIDTH/2,30), 90, 50)
+        Brick((UI.SCREEN_WIDTH/2*(-1),30), 90, 50)
+        
     def genBall(self):
         print("generating a ball")
         import random
@@ -117,7 +120,7 @@ class UI:
         pen.hideturtle()
 
     updateTimerStacks = []
-
+    
     def Update(self):
         self.deltaTime = (datetime.now() - self.lastCallTime).total_seconds()
 
@@ -167,6 +170,7 @@ class Arrow:
 
     def draw(self):
         ted = self.turtle
+        ted.hideturtle()
         radius = self.radius
         ted.speed(0)
         ted.up()
@@ -176,7 +180,8 @@ class Arrow:
         ted.forward(radius)
         ted.resizemode("user")
         ted.shapesize(.5, 2,1)   
-    
+        ted.stamp()
+        
     def tilt(self):
         i = self.tiltDirection
         if i == Direction.NONE:
@@ -188,11 +193,13 @@ class Arrow:
         else:
             # deltaTeta = 0
             return
-
         ted = self.turtle
+        # ted.clear()
+        ted.clearstamps()
         teta = radians( self.angle )
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector(cos(teta), sin(teta))*self.radius).tupple() ) 
         ted.tilt( deltaTeta )
+        ted.stamp()
 
         # if self.tilter!=None:
         #     self.tilter.cancel()
@@ -227,8 +234,12 @@ class GameObject:
         self.location = Vector.tuppleInit(initialLocation)
 
         self.object = turtle.Turtle()
-        self.object.left(self.velocity.teta)
-
+        self.object.hideturtle()
+        self.object.up()
+        self.object.goto(initialLocation)
+        # self.object.left(self.velocity.teta)
+        from math import degrees
+        self.object.tilt(degrees(self.velocity.teta))
         self.queue = False
         # self.generator = game.ui.pen.clone()
         # pen = self.generator
@@ -237,9 +248,6 @@ class GameObject:
     def move(self):
         # self.location += self.velocity * game.ui.deltaTime
         pass
-        # pen = self.generator
-        # pen.clear()
-        # pen.goto(self.location.tupple())
 
 class Ball(GameObject):
     RADIUS = 10
@@ -248,19 +256,26 @@ class Ball(GameObject):
         self.draw()
         
     def draw(self, fill = False):
-        # ted.resizemode("user")
-        # ted.shapesize(1, 1,0) 
         ted = self.object
         ted.turtlesize(0.7,0.7)
         ted.shape('circle')
         ted.up()
-
+        ted.showturtle()
+    
     def move(self):
         super().move()
-        # self.object.tilt(30)
-        # self.object.forward(10)
-        self.object.forward(self.velocity.size)
+        self.object.forward(self.velocity.size* game.ui.deltaTime)
         self.queue = False
+
+# from turtle import register_shape
+
+class Brick(GameObject):
+    def __init__(self, initialLocation, angle,size):
+        super().__init__(Vector.polarInit(size,angle).tupple(), initialLocation)
+        pen = self.object
+        pen.shape("square")
+        pen.turtlesize(1,size)
+        pen.showturtle()
 
 game = Game()
 print("Started Game ^^")
