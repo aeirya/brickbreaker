@@ -63,17 +63,23 @@ class Game:
         
     def InitializeUI(self):
         # gen balls and bricks
-        for i in range(200):
+        for i in range(3):
             self.genBall()
         Brick((UI.SCREEN_WIDTH*0.6,30), 90, 50)
         Brick((UI.SCREEN_WIDTH*0.6*(-1),30), 90, 50)
-        
+        a=Brick( (0,0), 0, 5)
+        b=Brick( (0,5), 0, 2)
+        game.gameObjects.append(a)
+        game.gameObjects.append(b)
+
     def genBall(self):
         print("generating a ball")
         import random
         startAngle = random.uniform(-90,90)
         velocity = random.uniform(0,5)
         self.gameObjects.append(Ball( Vector.polarInit(velocity,startAngle).tupple() , (random.uniform(-25,25),0) ))
+
+    # def genBrick(self):
 
     def setKeys(self):
         # self.ui.window.onkeypress(self.Quit(), "w")
@@ -87,13 +93,6 @@ class Game:
             now = datetime.datetime.now()
             if now - initialDate == delta:
                 break
-
-    @staticmethod
-    def wwait(secs):
-        t = 0 
-        while t < secs:
-            t+= 0.001
-            time.sleep(0.001)
 
     def Update(self):
         self.ui.lastCallTime = datetime.now()
@@ -136,13 +135,10 @@ class UI:
     threads = []
     
     def DeltaTime(self):
-        # if self.lastCallTime == None: return datetime.now()
         return (datetime.now() - self.lastCallTime).total_seconds()
 
-    def Update(self, frame=0):
+    def Update(self):
         self.deltaTime = self.DeltaTime()
-        # print(self.deltaTime)
-        print(frame)
         self.lastCallTime = datetime.now()
 
         for obj in self.game.gameObjects:
@@ -152,6 +148,10 @@ class UI:
                 self.threads.append(t)
                 t.start()
         
+        for t in self.threads:
+            while t.isAlive():
+                time.sleep(1/Game.FRAMERATE/6)
+
         x = 1/Game.FRAMERATE - self.DeltaTime()
         if x > 0 : time.sleep(x)
         self.window.update()
@@ -243,12 +243,13 @@ class GameObject:
         self.object.goto(initialLocation)
         # self.object.left(self.velocity.teta)
         from math import degrees
-        self.object.tilt(self.velocity.angle())
+        self.object.left(self.velocity.angle())
         self.queue = False
 
     def refresh(self):
         self.move()
-
+        self.object.tilt(5)
+        
     def move(self):
         pass
 
@@ -262,7 +263,7 @@ class Ball(GameObject):
         ted = self.object
         ted.turtlesize(0.7,0.7)
         # ted.shape('circle')
-        ted.shape("arrow")
+        ted.shape("circle")
         ted.up()
         ted.showturtle()
     
