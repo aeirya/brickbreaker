@@ -63,15 +63,16 @@ class Game:
         
     def InitializeUI(self):
         # gen balls and bricks
-
+        for i in range(200):
+            self.genBall()
         Brick((UI.SCREEN_WIDTH*0.6,30), 90, 50)
         Brick((UI.SCREEN_WIDTH*0.6*(-1),30), 90, 50)
         
     def genBall(self):
         print("generating a ball")
         import random
-        startAngle = random.uniform(0,90)
-        velocity = random.uniform(0,1)
+        startAngle = random.uniform(-90,90)
+        velocity = random.uniform(0,5)
         self.gameObjects.append(Ball( Vector.polarInit(velocity,startAngle).tupple() , (random.uniform(-25,25),0) ))
 
     def setKeys(self):
@@ -151,11 +152,12 @@ class UI:
                 self.threads.append(t)
                 t.start()
         
-        # time.sleep(1/Game.FRAMERATE - self.DeltaTime())
+        x = 1/Game.FRAMERATE - self.DeltaTime()
+        if x > 0 : time.sleep(x)
         self.window.update()
         # self.Update(frame+1)
-        threading.Timer(1/Game.FRAMERATE, self.Update()).start()
-
+        # threading.Thread( target = self.Update).start()
+        self.Update()
 
     def setKeyEvents(self):
         win = self.window
@@ -259,13 +261,15 @@ class Ball(GameObject):
     def draw(self, fill = False):
         ted = self.object
         ted.turtlesize(0.7,0.7)
-        ted.shape('circle')
+        # ted.shape('circle')
+        ted.shape("arrow")
         ted.up()
         ted.showturtle()
     
     def move(self):
         super().move()
-        self.object.forward(self.velocity.size* game.ui.deltaTime)
+        self.object.forward(self.velocity.size()* game.ui.deltaTime)
+
         self.queue = False
 
 class Brick(GameObject):
