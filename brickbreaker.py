@@ -53,6 +53,8 @@ import threading
 
 class Game:
     gameObjects = []
+    balls = []
+    bricks = []
     FRAMERATE = 30
     
     def __init__(self):
@@ -70,27 +72,39 @@ class Game:
         
     def InitializeUI(self):
         # gen balls and bricks
-        for i in range(3):
-            self.genBall()
+        # for i in range(3):
+        #     self.genBall()
         # Rect((UI.SCREEN_WIDTH*0.6,30), 90, (1,50))
         # Rect((UI.SCREEN_WIDTH*0.6*(-1),30), 90, (1,50))
         # a=Brick( (0,0))
         b=Brick( (0,150))
         # game.gameObjects.append(a)
-        # game.gameObjects.append(b)
+        self.bricks.append(b)
+        
+        # self.gameObjects += self.bricks + self.balls
 
     def genBall(self):
         print("generating a ball")
         import random
         startAngle = random.uniform(-90,90)
         velocity = random.uniform(0,5)
-        self.gameObjects.append(Ball( Vector.polarInit(velocity,startAngle).tupple() , (random.uniform(-25,25),0) ))
+        self.balls.append(Ball( Vector.polarInit(velocity,startAngle).tupple() , (random.uniform(-25,25),0) ))
 
     # def genBrick(self):
 
     def setKeys(self):
         # self.ui.window.onkeypress(self.Quit(), "w")
         pass
+
+    def shoot(self):
+        # print("Pew!")
+        arrow = self.ui.arrow
+        direction = Vector.i(arrow.angle)
+        initPos = Vector(tuple(arrow.turtle.pos())) + direction*(Ball.RADIUS*3 + arrow.length)
+        # print(type(initPos))
+        for i in range(5):
+            self.balls.append( Ball( initPos, direction ) ) 
+            time.sleep(0.005)
 
     @staticmethod
     def wait(secs):
@@ -120,7 +134,7 @@ class Physics:
         pass
     
     @staticmethod
-    def checkCollision():
+    def checkCollision(ball, rect):
         pass
 
 class UI:
@@ -136,7 +150,7 @@ class UI:
         self.window =Screen()
         win = self.window
         win.tracer(0,0) 
-        win.bgcolor("light grey")
+        win.bgcolor("dark grey")
         win.setup(0,0)
         win.title("Another Brick Breaker Game :))")
         self.arrow = Arrow()
@@ -160,14 +174,16 @@ class UI:
     def Update(self):
         self.deltaTime = self.DeltaTime()
         self.lastCallTime = datetime.now()
-
-        for obj in self.game.gameObjects:
+        self.gameObjects = [self.arrow] + self.game.balls + self.game.bricks
+        for obj in self.gameObjects:
             if obj != None:
                 t = threading.Thread(target = obj.refresh)
                 t.name = "Object Refresh"
                 self.threads.append(t)
                 t.start()
         
+        # Physics.checkCollision( 
+
         for t in self.threads:
             while t.isAlive():
                 time.sleep(1/Game.FRAMERATE/10)
@@ -183,6 +199,7 @@ class UI:
         win.onkeypress(self.arrow.tiltRight, "Right")
         win.onkeyrelease(self.arrow.stopTilting, "Left")
         win.onkeyrelease(self.arrow.stopTilting, "Right")
+        win.onkeypress(self.game.shoot, "space")
 
 class Direction:
     Left, Right, NONE = 1,-1,0
@@ -194,6 +211,7 @@ class Arrow:
     tilter = None
     isTilting = False
     angV = 3 * Game.FRAMERATE
+    length = 2
     T = 0
 
     def __init__(self):
@@ -213,7 +231,7 @@ class Arrow:
         ted.shape("arrow")
         ted.forward(radius)
         ted.resizemode("user")
-        ted.shapesize(.5, 2,1)   
+        ted.shapesize(self.length*0.2, self.length,1)   
         # ted.stamp()
         
     def refresh(self):
@@ -253,21 +271,27 @@ class GameObject:
 
     Points = [] * 4
 
-    def __init__(self, initialLocation=(0,0), vector= Vector(0,0) ):
-        self.location = Vector.tuppleInit(initialLocation)
+    def __init__(self, initialLocation=Vector(0,0), vector= Vector(0,0) ):
+        if type(initialLocation) == type(tuple()):
+            self.location = Vector.tuppleInit(initialLocation)
+        else:
+            self.location = initialLocation
+
         self.object = turtle.Turtle()
         self.object.hideturtle()
         self.object.up()
-        self.object.goto(initialLocation)
+        self.object.goto(self.location.tupple())
         self.object.left(vector.angle())
 
 
 class Ball(GameObject):
     RADIUS = 10
+    speed = 10 * Game.FRAMERATE
 
-    def __init__(self, initialLocation = (0,0), vector = (0,0) ):
-        super().__init__(initialLocation, Vector.tuppleInit(vector) )
-        self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
+    def __init__(self, initialLocation = (0,0), vector = Vector(0,0) ):
+        super().__init__(initialLocation, vector )
+        # self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
+        self.velocity = vector * self.speed
         self.draw()
         
     def draw(self, fill = False):
@@ -281,7 +305,7 @@ class Ball(GameObject):
         self.move()
 
     def move(self):
-        self.object.forward(self.velocity.size()* game.ui.deltaTime)
+        self.object.forward(self.speed * game.ui.deltaTime)
 
 class Rect(GameObject):
     def __init__(self, initialLocation, angle,size):
@@ -318,6 +342,7 @@ class Rect(GameObject):
         pen.end_fill()
 
         self.Points = Points
+
 
 class Brick(Rect):
     angle = 0
