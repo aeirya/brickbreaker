@@ -3,7 +3,9 @@ print("((BREAK BREAKER))\nMade by: Me")
 import turtle
 
 class Vector:
-    def __init__(self, x=0,y=0):
+    def __init__(self, x=(0,0) ,y=None):
+        if y == None:
+            x,y = x
         self.x = x
         self.y = y
         
@@ -28,6 +30,10 @@ class Vector:
         from math import cos,sin,radians
         t = radians(t)
         return Vector(r*cos(t), r*sin(t))
+
+    @staticmethod
+    def i(t):
+        return Vector.polarInit(1,t)
 
     def __add__(self, v):
         return __class__(self.x + v.x, self.y + v.y)
@@ -56,7 +62,8 @@ class Game:
         self.setKeys()
         uiThread = threading.Timer(0.2, self.InitializeUI)
         uiThread.start()
-
+        
+        physics = Physics()
         updateThread = threading.Timer(0.3, self.Update)
         updateThread.name = "Update Thread"
         updateThread.start()
@@ -65,12 +72,12 @@ class Game:
         # gen balls and bricks
         for i in range(3):
             self.genBall()
-        Brick((UI.SCREEN_WIDTH*0.6,30), 90, 50)
-        Brick((UI.SCREEN_WIDTH*0.6*(-1),30), 90, 50)
-        a=Brick( (0,0), 0, 5)
-        b=Brick( (0,5), 0, 2)
-        game.gameObjects.append(a)
-        game.gameObjects.append(b)
+        # Rect((UI.SCREEN_WIDTH*0.6,30), 90, (1,50))
+        # Rect((UI.SCREEN_WIDTH*0.6*(-1),30), 90, (1,50))
+        # a=Brick( (0,0))
+        b=Brick( (0,150))
+        # game.gameObjects.append(a)
+        # game.gameObjects.append(b)
 
     def genBall(self):
         print("generating a ball")
@@ -103,8 +110,21 @@ class Game:
         self.ui.window.bye()
         quit(0)
 
+class Physics:
+    
+    def __init__(self):
+        print(super())
+
+    @staticmethod
+    def move():
+        pass
+    
+    @staticmethod
+    def checkCollision():
+        pass
+
 class UI:
-    SCREEN_WIDTH, SCREEN_HEIGHT = 500, 700
+    SCREEN_WIDTH, SCREEN_HEIGHT = 500, 600
     deltaTime = 1/Game.FRAMERATE
     
     def __init__(self, game):
@@ -121,7 +141,7 @@ class UI:
         win.title("Another Brick Breaker Game :))")
         self.arrow = Arrow()
         self.game.gameObjects.append(self.arrow)
-        win.setup(UI.SCREEN_WIDTH*1.5, UI.SCREEN_HEIGHT*1.5) 
+        win.setup(UI.SCREEN_WIDTH*1.5, UI.SCREEN_HEIGHT*2) 
         win.screensize(canvwidth=UI.SCREEN_WIDTH, canvheight=UI.SCREEN_HEIGHT)
         self.setKeyEvents()
         win.listen()
@@ -150,13 +170,11 @@ class UI:
         
         for t in self.threads:
             while t.isAlive():
-                time.sleep(1/Game.FRAMERATE/6)
+                time.sleep(1/Game.FRAMERATE/10)
 
         x = 1/Game.FRAMERATE - self.DeltaTime()
         if x > 0 : time.sleep(x)
         self.window.update()
-        # self.Update(frame+1)
-        # threading.Thread( target = self.Update).start()
         self.Update()
 
     def setKeyEvents(self):
@@ -232,54 +250,90 @@ class Arrow:
         self.startTilting()
 
 class GameObject:
-    def __init__(self, vector= (0,0), initialLocation=(0,0), movable = False):
-        self.movability = movable
-        self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
-        self.location = Vector.tuppleInit(initialLocation)
 
+    Points = [] * 4
+
+    def __init__(self, initialLocation=(0,0), vector= Vector(0,0) ):
+        self.location = Vector.tuppleInit(initialLocation)
         self.object = turtle.Turtle()
         self.object.hideturtle()
         self.object.up()
         self.object.goto(initialLocation)
-        # self.object.left(self.velocity.teta)
-        from math import degrees
-        self.object.left(self.velocity.angle())
-        self.queue = False
+        self.object.left(vector.angle())
 
-    def refresh(self):
-        self.move()
-        self.object.tilt(5)
-        
-    def move(self):
-        pass
 
 class Ball(GameObject):
     RADIUS = 10
-    def __init__(self, vector = (0,0), initialLocation = (0,0)):
-        super().__init__(vector, initialLocation)
+
+    def __init__(self, initialLocation = (0,0), vector = (0,0) ):
+        super().__init__(initialLocation, Vector.tuppleInit(vector) )
+        self.velocity = Vector.tuppleInit(vector) * Game.FRAMERATE
         self.draw()
         
     def draw(self, fill = False):
         ted = self.object
         ted.turtlesize(0.7,0.7)
-        # ted.shape('circle')
         ted.shape("circle")
         ted.up()
         ted.showturtle()
     
+    def refresh(self):
+        self.move()
+
     def move(self):
-        super().move()
         self.object.forward(self.velocity.size()* game.ui.deltaTime)
 
-        self.queue = False
-
-class Brick(GameObject):
+class Rect(GameObject):
     def __init__(self, initialLocation, angle,size):
-        super().__init__(Vector.polarInit(size,angle).tupple(), initialLocation)
+        super().__init__(initialLocation, Vector.i(angle))
+        # pen = self.object
+        # pen.shape("square")
+        self.size = size
+        # pen.turtlesize(w,l)
+        # pen.showturtle()
+        self.draw()
+        
+
+    def draw(self):
         pen = self.object
-        pen.shape("square")
-        pen.turtlesize(1,size)
-        pen.showturtle()
+        center = Vector(pen.pos()[0], pen.pos()[1])
+        w,l = self.size
+        Points = [ Vector( w/2, -l/2 ), Vector( -w/2, -l/2 ),
+         Vector( -w/2, l/2 ) , Vector ( w/2, l/2 ) ]
+        for i in range(len(Points)):
+            Points[i] += center
+
+        # pen.speed(0)
+        pen.forward(w/2)
+        pen.down()
+        pen.fillcolor('brown')
+        pen.begin_fill()
+        pen.pensize(3)
+
+        for p in Points:
+            pen.goto(p.tupple())
+
+        pen.goto(Points[0].tupple())
+
+        pen.end_fill()
+
+        self.Points = Points
+
+class Brick(Rect):
+    angle = 0
+    # size = 5,2.5
+    size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
+
+    def __init__(self, initialLocation ):
+        super().__init__(initialLocation, self.angle, self.size)
+
+    def refresh(self):
+        pass
+        #update health
+        #show health / destroy
+
+class Wall(Rect):
+    pass
 
 game = Game()
 print("Started Game ^^")
