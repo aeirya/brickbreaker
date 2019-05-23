@@ -1,6 +1,11 @@
 # from brickbreaker import Direction
 from vector import Vector
 
+from gamemanager import GameManager as gm
+from gamemanager import UI
+
+import turtle
+
 class Direction:
     Left, Right, NONE = 1,-1,0
 
@@ -16,9 +21,9 @@ class Arrow:
     def __init__(self):
         super().__init__()
 
-        from brickbreaker import UI
+        # from brickbreaker import UI
         import turtle
-        self.angV = 3# * UI.FRAMERATE
+        self.angV = gm.ARROW_VELOCITY * gm.FRAMERATE
 
         self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT/2))
         self.turtle = turtle.Turtle()
@@ -38,15 +43,15 @@ class Arrow:
         ted.shapesize(self.length*0.2, self.length,1)   
         # ted.stamp()
         
-    def refresh(self):
-        self.tilt()
+    def refresh(self, deltaTime):
+        self.tilt(deltaTime)
 
-    def tilt(self):
+    def tilt(self, deltaTime):
         i = self.tiltDirection
         if i == Direction.NONE: return
 
         from math import cos,sin
-        deltaTeta = i* self.angV #* game.ui.deltaTime
+        deltaTeta = i* self.angV * deltaTime
 
         if not 0 <= self.angle + deltaTeta <= 180:
             return
@@ -81,44 +86,64 @@ class GameObject:
         else:
             self.location = initialLocation
         
-        import turtle
-        self.object = turtle.Turtle()
-        self.object.hideturtle()
-        self.object.up()
-        self.object.goto(self.location.tupple())
-        self.object.left(vector.angle())
+        # self.object = turtle.Turtle()
+        # self.object.up()
+
+        from turtle import Vec2D
+        a = Vec2D(1,2)
+        print(a)
+
+        global turtleInstance
+        # self.object.goto(self.location.tupple())
+        # print( turtleInstance.position())
+        # print(self.location.tupple())
+        if turtleInstance.position() != self.location.tupple():
+            turtleInstance.goto(self.location.tupple())
+            # print("going")
+        self.object = turtleInstance.clone()
+        # turtle
+
+        # self.object.hideturtle()
+        # self.object.left(vector.angle())
 
 
 class Ball(GameObject):
     RADIUS = 10
-    speed = 10 #* FRAMERATE
+    
+    # speed = 10 #* FRAMERATE
 
     def __init__(self, initialLocation = (0,0), vector = Vector(0,0) ):
         super().__init__(initialLocation, vector )
-
-        self.velocity = vector * self.speed
+        
         self.draw()
+        self.speed = gm.BALL_VELOCITY * gm.FRAMERATE
+        self.velocity = vector * self.speed
+
+        # self.object
+
+        self.object.left(vector.angle())
         
     def draw(self, fill = False):
         ted = self.object
-        ted.turtlesize(0.7,0.7)
-        ted.pensize(2)
+        # ted.turtlesize(0.7,0.7)
+        # ted.pensize(2)
 
         # ted.shape("circle")
         # ted.up()
-        ted.down()
+        # ted.down()
+        ted.shape(UI.soccerball)
         ted.showturtle()
     
-    def refresh(self):
-        self.move()
+    def refresh(self, deltaTime):
+        self.move(deltaTime)
 
-    def move(self):
-        fill = True
-        self.object.clear()
-        if fill: self.object.begin_fill()
-        self.object.forward(self.speed )
-        self.object.circle(self.RADIUS)
-        if fill: self.object.end_fill()
+    def move(self, deltaTime):
+        # fill = True
+        # self.object.clear()
+        # if fill: self.object.begin_fill()
+        self.object.forward(self.speed * deltaTime)
+        # self.object.circle(self.RADIUS)
+        # if fill: self.object.end_fill()
         
     def checkCollision( rect ):
         pass
@@ -167,7 +192,6 @@ class Brick(Rect):
 
     def __init__(self, initialLocation = Vector(0,0) ):
         super().__init__(initialLocation, self.angle, self.size)
-        from brickbreaker import UI
         self.size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
 
     def refresh(self):
@@ -178,3 +202,7 @@ class Brick(Rect):
 class Wall(Rect):
     pass
 
+
+turtleInstance = turtle.Turtle()
+turtleInstance.hideturtle()
+turtleInstance.up()
