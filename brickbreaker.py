@@ -44,13 +44,15 @@ class Game:
     def shoot(self):
         arrow = self.arrow
         direction = Vector.i(arrow.angle)
-        initPos = Vector(tuple(arrow.turtle.pos())) + direction*(Ball.RADIUS*3 + arrow.length)
+        initPos = arrow.turtle.pos() + direction.toVec2D()*(Ball.RADIUS*2 + arrow.length)
         n = 4
-        balls = [ Ball(initPos, direction) for _ in range(n) ]
-        print(balls)
-        for b in balls:
-            b.object.forward(20)
-            self.balls.append(b)
+        
+        d = Ball.RADIUS*2.1
+        for i in range(n):
+            ball = Ball(initPos, direction, d / Ball.speed * i)
+            self.balls.append(ball)
+            # balls[i].object.forward(d*i)
+
 
             # time.sleep(0.1)
             # time.sleep(1/UI.FRAMERATE)
@@ -73,6 +75,8 @@ class Game:
             # self.arrow.refresh(self.deltaTime)
             # for obj in self.balls:
                 # obj.refresh(self.deltaTime)
+            # print(self.deltaTime, 1/GameManager.FRAMERATE)
+            
             self.Refresh(self.arrow)
             list( map(self.Refresh, self.balls) )
             # print(list(x))

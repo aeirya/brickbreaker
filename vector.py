@@ -1,3 +1,5 @@
+from turtle import Vec2D
+
 class Vector:
     def __init__(self, x=(0,0) ,y=None):
         if y == None:
@@ -42,3 +44,6 @@ class Vector:
 
     def tupple(self):
         return self.x, self.y
+
+    def toVec2D(self):
+        return Vec2D(self.x, self.y)

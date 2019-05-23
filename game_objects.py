@@ -5,6 +5,7 @@ from gamemanager import GameManager as gm
 from gamemanager import UI
 
 import turtle
+from turtle import Vec2D
 
 class Direction:
     Left, Right, NONE = 1,-1,0
@@ -80,25 +81,22 @@ class GameObject:
 
     Points = [] * 4
 
-    def __init__(self, initialLocation=Vector(0,0), vector= Vector(0,0) ):
+    def __init__(self, initialLocation=Vec2D(0,0), vector= Vector(0,0) ):
         if type(initialLocation) == type(tuple()):
-            self.location = Vector(initialLocation)
+            self.location = Vector(initialLocation).toVec2D()
         else:
             self.location = initialLocation
         
         # self.object = turtle.Turtle()
         # self.object.up()
 
-        from turtle import Vec2D
-        a = Vec2D(1,2)
-        print(a)
 
         global turtleInstance
         # self.object.goto(self.location.tupple())
         # print( turtleInstance.position())
-        # print(self.location.tupple())
-        if turtleInstance.position() != self.location.tupple():
-            turtleInstance.goto(self.location.tupple())
+        # print(self.location)
+        if turtleInstance.position() != self.location:
+            turtleInstance.goto(self.location)
             # print("going")
         self.object = turtleInstance.clone()
         # turtle
@@ -108,20 +106,23 @@ class GameObject:
 
 
 class Ball(GameObject):
-    RADIUS = 10
-    
+    # RADIUS = 10
+    RADIUS = gm.BALL_RADIUS
     # speed = 10 #* FRAMERATE
+    speed = gm.BALL_VELOCITY * gm.FRAMERATE
 
-    def __init__(self, initialLocation = (0,0), vector = Vector(0,0) ):
+    def __init__(self, initialLocation = Vec2D(0,0), vector = Vector(0,0), t : int = 0):
         super().__init__(initialLocation, vector )
         
         self.draw()
-        self.speed = gm.BALL_VELOCITY * gm.FRAMERATE
         self.velocity = vector * self.speed
 
         # self.object
 
         self.object.left(vector.angle())
+        if t!=0:
+            self.object.hideturtle()
+        self.t = t
         
     def draw(self, fill = False):
         ted = self.object
@@ -135,7 +136,12 @@ class Ball(GameObject):
         ted.showturtle()
     
     def refresh(self, deltaTime):
-        self.move(deltaTime)
+        if self.t > 0: 
+            self.t-= deltaTime
+            if self.t <= 0:
+                self.object.showturtle()
+        # print(self.t)
+        if self.t <= 0: self.move(deltaTime)
 
     def move(self, deltaTime):
         # fill = True
