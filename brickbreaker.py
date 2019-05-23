@@ -10,10 +10,12 @@ from vector import Vector
 # import game_objects
 from game_objects import Arrow, Brick, Wall, Ball
 from gamemanager import GameManager
+import gamemanager
 
 class Game:
     balls = []
     bricks = []
+    number_of_balls = 1
 
     def __init__(self):
         super().__init__()
@@ -44,12 +46,12 @@ class Game:
     def shoot(self):
         arrow = self.arrow
         direction = Vector.i(arrow.angle)
-        initPos = arrow.turtle.pos() + direction.toVec2D()*(Ball.RADIUS*2 + arrow.length)
-        n = 4
-        
+        # initPos = arrow.turtle.pos() + direction.toVec2D()*(Ball.RADIUS*2 + arrow.length)
+        initPos = arrow.turtle.pos() + direction.toVec2D() * (arrow.length * 2 + Ball.RADIUS)
         d = Ball.RADIUS*2.1
-        for i in range(n):
-            ball = Ball(initPos, direction, d / Ball.speed * i)
+        for i in range(self.number_of_balls):
+            ball = Ball(initPos, direction, d / Ball.speed * (i+1) )
+            # ball.object.dot()
             self.balls.append(ball)
             # balls[i].object.forward(d*i)
 
@@ -89,7 +91,7 @@ class Game:
         quit(0)
 
 class UI:
-    SCREEN_WIDTH, SCREEN_HEIGHT = 500, 600
+    SCREEN_WIDTH, SCREEN_HEIGHT = gamemanager.UI.SCREEN_WIDTH, gamemanager.UI.SCREEN_HEIGHT
     # FRAMERATE = 30
     # deltaTime = 1/FRAMERATE
     FRAMERATE = GameManager.FRAMERATE

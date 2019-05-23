@@ -32,7 +32,6 @@ class Arrow:
 
     def draw(self):
         ted = self.turtle
-        # ted.hideturtle()
         radius = self.RADIUS
         ted.speed(0)
         ted.up()
@@ -42,10 +41,10 @@ class Arrow:
         ted.forward(radius)
         ted.resizemode("user")
         ted.shapesize(self.length*0.2, self.length,1)   
-        # ted.stamp()
         
     def refresh(self, deltaTime):
         self.tilt(deltaTime)
+        # print(self.T)
 
     def tilt(self, deltaTime):
         i = self.tiltDirection
@@ -62,20 +61,24 @@ class Arrow:
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector.polarInit(self.RADIUS, self.angle)).tupple() ) 
         ted.tilt( deltaTeta )
 
-    def startTilting(self):     
-        self.T += self.tiltDirection
+    # def startTilting(self):     
+    #     self.T += self.tiltDirection
+
+        # x = self.T
+        # if abs(x)>1:
+        #     self.T = abs(x)/x
 
     def stopTilting(self):
-        if self.T != 0:
-            self.tiltDirection = Direction.NONE
+        # if self.T != 0:
+        self.tiltDirection = Direction.NONE
 
     def tiltLeft(self):
         self.tiltDirection = Direction.Left
-        self.startTilting()
+        # self.startTilting()
 
     def tiltRight(self):
         self.tiltDirection = Direction.Right
-        self.startTilting()
+        # self.startTilting()
 
 class GameObject:
 
