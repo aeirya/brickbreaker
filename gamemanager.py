@@ -9,6 +9,6 @@ class GameManager:
     # Screen_Size = (X,Y)
 
 class UI:
-    SCREEN_WIDTH, SCREEN_HEIGHT = 500, 600
+    SCREEN_WIDTH, SCREEN_HEIGHT = 700, 700
     soccerball = "ball.gif"
     

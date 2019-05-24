@@ -26,7 +26,7 @@ class Arrow:
         import turtle
         self.angV = gm.ARROW_VELOCITY * gm.FRAMERATE
 
-        self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT/2))
+        self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT * (0.75+0.5)/2))
         self.turtle = turtle.Turtle()
         self.draw()
 
@@ -101,6 +101,7 @@ class GameObject:
         if turtleInstance.position() != self.location:
             turtleInstance.goto(self.location)
             # print("going")
+            # print("going")
         self.object = turtleInstance.clone()
         # turtle
 
@@ -158,8 +159,8 @@ class Ball(GameObject):
         pass
 
 class Rect(GameObject):
-    def __init__(self, initialLocation, angle,size):
-        super().__init__(initialLocation, Vector.i(angle))
+    def __init__(self, initialLocation ,size):
+        super().__init__(initialLocation)
         # pen = self.object
         # pen.shape("square")
         self.size = size
@@ -170,6 +171,7 @@ class Rect(GameObject):
 
     def draw(self):
         pen = self.object
+        # print("pen is at", pen.pos())
         center = Vector(pen.pos()[0], pen.pos()[1])
         w,l = self.size
         Points = [ Vector( w/2, -l/2 ), Vector( -w/2, -l/2 ),
@@ -195,13 +197,10 @@ class Rect(GameObject):
 
 
 class Brick(Rect):
-    angle = 0
-    size = 5,2.5
-    
+    size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
 
-    def __init__(self, initialLocation = Vector(0,0) ):
-        super().__init__(initialLocation, self.angle, self.size)
-        self.size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
+    def __init__(self, initialLocation = Vec2D(0,0) ):  
+        super().__init__(initialLocation, self.size)
 
     def refresh(self):
         pass

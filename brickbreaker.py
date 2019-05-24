@@ -7,7 +7,6 @@ import threading
 
 #import my own classes
 from vector import Vector
-# import game_objects
 from game_objects import Arrow, Brick, Wall, Ball
 from gamemanager import GameManager
 import gamemanager
@@ -16,7 +15,7 @@ class Game:
     balls = []
     bricks = []
     number_of_balls = 1
-
+    
     def __init__(self):
         super().__init__()
 
@@ -27,12 +26,19 @@ class Game:
         updateThread = threading.Timer(0.3, self.Update)
         updateThread.name = "Update Thread"
         updateThread.start()
-        
-    def InitializeUI(self):
-        self.arrow = Arrow()
-        # self.bricks.append( Brick() )
-        # self.balls.append( Ball() )
 
+    def InitializeUI(self):
+        y = self.ui.SCREEN_HEIGHT
+        x = self.ui.SCREEN_WIDTH 
+        self.arrow = Arrow()
+        # self.bricks.append( Brick((-x/2,y/2) ) )
+        # self.bricks.append(Brick(self.))
+        # self.balls.append( Ball() )
+        for i in range(2):
+            for x in self.ui.squares[i]:
+                self.bricks.append( Brick(x) )
+                # print("adding to", x)
+                pass
 
     def setKeyEvents(self):
         win = self.ui.window
@@ -46,43 +52,28 @@ class Game:
     def shoot(self):
         arrow = self.arrow
         direction = Vector.i(arrow.angle)
-        # initPos = arrow.turtle.pos() + direction.toVec2D()*(Ball.RADIUS*2 + arrow.length)
         initPos = arrow.turtle.pos() + direction.toVec2D() * (arrow.length * 2 + Ball.RADIUS)
         d = Ball.RADIUS*2.1
         for i in range(self.number_of_balls):
             ball = Ball(initPos, direction, d / Ball.speed * (i+1) )
-            # ball.object.dot()
             self.balls.append(ball)
-            # balls[i].object.forward(d*i)
-
-
-            # time.sleep(0.1)
-            # time.sleep(1/UI.FRAMERATE)
 
     def tick(self):
         now = datetime.now()
         try: self.deltaTime = (now - self.lastCall).total_seconds()
-        except: self.deltaTime = 1/self.ui.FRAMERATE
+        except: self.deltaTime = 1/self.ui.FRAMERATE/10
         self.lastCall = now
    
     def Refresh(self, object ):
         object.refresh(self.deltaTime)
-        return type(object)
+        # return type(object)
 
     def Update(self):
 
         while True:
             self.tick()
-            # gameObjects = [ self.arrow ] + self.balls
-            # self.arrow.refresh(self.deltaTime)
-            # for obj in self.balls:
-                # obj.refresh(self.deltaTime)
-            # print(self.deltaTime, 1/GameManager.FRAMERATE)
-            
             self.Refresh(self.arrow)
             list( map(self.Refresh, self.balls) )
-            # print(list(x))
-            # time.sleep(0.005)
             self.ui.window.update()
 
     def Quit(self):
@@ -92,30 +83,45 @@ class Game:
 
 class UI:
     SCREEN_WIDTH, SCREEN_HEIGHT = gamemanager.UI.SCREEN_WIDTH, gamemanager.UI.SCREEN_HEIGHT
-    # FRAMERATE = 30
-    # deltaTime = 1/FRAMERATE
     FRAMERATE = GameManager.FRAMERATE
-    
+    # SQUARES = (8,4)
     def __init__(self):
         super().__init__()
         from turtle import Screen, Turtle
         win = Screen()
         win.tracer(0,0) 
         win.bgcolor("dark grey")
-        # win.setup(0,0)
+        # win.bgcolor("#029ed2")
         win.title("Another Brick Breaker Game :))")
-        win.setup(self.SCREEN_WIDTH*1.5, self.SCREEN_HEIGHT*2) 
-        # win.screensize(canvwidth=self.SCREEN_WIDTH, canvheight=self.SCREEN_HEIGHT)
+        win.setup(self.SCREEN_WIDTH*1.5, self.SCREEN_HEIGHT*1.5) 
+        win.screensize(canvwidth=self.SCREEN_WIDTH, canvheight=self.SCREEN_HEIGHT)
         win.listen()
         self.window = win
         
         self.pen = Turtle()
-        # self.pen.hideturtle()
+        self.pen.hideturtle()
         self.pen.pensize(3)
         self.pen.up()
-        self.pen.goto(-self.SCREEN_WIDTH*0.4, self.SCREEN_HEIGHT/2 )
+        self.pen.goto( -180, self.SCREEN_HEIGHT/4 )
         self.importTextures()
         self.drawScreenUI()
+        self.generateSquares()
+
+    # from turtle import Vec2D
+    def generateSquares(self):
+        self.squares = []
+        sq = self.squares
+        for i in range(9):
+            line = []
+            for j in range(6):
+                p = turtle.Vec2D( (UI.SCREEN_WIDTH+5)*(j-3)/6 + Brick.size[0]/2  , ( UI.SCREEN_HEIGHT + 25) *(4.5-i)/9 )
+                print(p)
+                line.append(p)
+                # print(i,j)
+            sq.append(line)
+
+        # print(len(sq))
+        # print(len(sq[0]))
 
     def importTextures(self):
         soccerball = "ball.gif"
