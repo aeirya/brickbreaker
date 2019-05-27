@@ -148,8 +148,8 @@ class Ball(GameObject):
     def collides(self, rect ):
         p = rect.Points
         direction = self.direction
-        displacement =  self.velocity / gm.FRAMERATE
-        # displacement = Vector(0,0)
+        # displacement =  self.velocity / gm.FRAMERATE
+        displacement = Vector(0,0)
         location = Vector(self.location)
         size = Vector(rect.size)
 
@@ -174,22 +174,41 @@ class Ball(GameObject):
         checkCollision = lambda p1,p2,direction : calc(p1,p2, self.RADIUS, location, displacement, size, direction)
         
         def check(p1,p2,d):
-            if checkCollision(p1,p2,d): self.reflect(d)
+            if checkCollision(p1,p2,d): 
+                self.reflect(d)
+                return True
         
         h = Direction.Horizontal
         v = Direction.Vertical
 
         collision = check(p[2], p[1], h)  or check(p[3], p[0], h) or check(p[1], p[0], v) or check(p[2],p[3],v)
+        if collision: return True
+
+        checkEdge = lambda point, center, radius: (point-center).size() < radius
+        checkCollisionOnEdge = lambda point: checkEdge(point, Vector(self.location), self.RADIUS)
         
-        checkEdge = lambda p, center, radius: (p-center).size() < radius
-        checkCollisionOnEdge = lambda p: checkEdge(p, Vector(self.location), self.RADIUS)
-        
-        collision2 = sum( list( map( checkCollisionOnEdge, p[:-1] ) ) ) > 0
-        
-        if collision2: 
-            pass
-            
-        return collision or collision2
+        collision = sum( list( map( checkCollisionOnEdge, p[:-1] ) ) ) > 0
+        if collision:
+            list( map( self.reflect, [Direction.Vertical, Direction.Horizontal] ) )
+
+        '''
+        collision2 = False
+        for point in p[:-1]:
+            if checkCollisionOnEdge(point):
+                d = Direction.Horizontal
+                x, y = self.location
+                if x < point.getX():
+                    if point in [ p[2], p[3] ]:
+                        d = (Direction.Vertical)
+                else:
+                    if point in [ p[0], p[1] ]:
+                        d = Direction.Vertical
+                self.reflect(d)
+                collision2 = True
+                break
+        if collision2 : print("yaaay")
+        '''    
+        return collision
 
     def reflect(self, c):
         d = self.direction 
@@ -230,40 +249,44 @@ class Rect(GameObject):
         pen.goto(center.toVec2D() + (-5,-10))
         self.Points = Points
 
-    # def checkHorizontalCollision(self, ball):
-        
-
 class Brick(Rect):
 
     size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
     health = 0
-    isDamaged = True
+    # isDamaged = True
 
-    def __init__(self, initialLocation = Vec2D(0,0) ):  
+    def __init__(self, initialLocation = Vec2D(0,0), initialHealth = 1 ):  
         super().__init__(initialLocation, self.size)
-        self.spawn(1)
+        self.spawn( initialHealth )
+        self.refresh()
 
     def refresh(self):
-        if self.isDamaged:
-            hFont = ('Arial', 22)
-            if self.health != 0:
-                self.object.undo()
-                self.object.write(self.health, font = (hFont) )
-                self.isDamaged = False
-            else:
-                self.object.clear()
+        # if self.isDamaged:
+        hFont = ('Arial', 22)
+        if self.health != 0:
+            self.object.undo()
+            self.object.write(self.health, font = (hFont) )
+            self.isDamaged = False
+        else:
+            self.object.clear()
+            
         #update health
         #show health / destroy
 
     def spawn(self, intitHealth):
         self.health = intitHealth
-        self.object.dot()
+        self.object.dot() #to cancel out the undo()
+
+    def loseHealth(self):
+        self.health -= 1
+        # print("losing health")
+        self.refresh()
+
+    def __del__(self):
+        pass
 
 class Wall(Rect):
     pass
-
-
-
 
 turtleInstance = turtle.Turtle()
 turtleInstance.hideturtle()
