@@ -12,5 +12,5 @@ class UI:
     SCREEN_WIDTH, SCREEN_HEIGHT = 600, 450
 
 class Shape:
-    soccerball = "ball.gif"
-    brick = "brick.gif"
+    soccerball = "Textures/ball.gif"
+    # brick = "brick.gif"
