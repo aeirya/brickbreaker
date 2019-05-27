@@ -8,7 +8,7 @@ import threading
 #import my own classes
 from vector import Vector
 from game_objects import Arrow, Brick, Wall, Ball
-from gamemanager import GameManager
+from gamemanager import GameManager, Shape
 import gamemanager
 
 class Game:
@@ -28,17 +28,13 @@ class Game:
         updateThread.start()
 
     def InitializeUI(self):
-        y = self.ui.SCREEN_HEIGHT
-        x = self.ui.SCREEN_WIDTH 
+        # y = self.ui.SCREEN_HEIGHT
+        # x = self.ui.SCREEN_WIDTH 
         self.arrow = Arrow()
-        # self.bricks.append( Brick((-x/2,y/2) ) )
-        # self.bricks.append(Brick(self.))
-        # self.balls.append( Ball() )
-        for i in range(2):
+
+        for i in range(1):
             for x in self.ui.squares[i]:
-                self.bricks.append( Brick(x) )
-                # print("adding to", x)
-                pass
+                self.bricks.append( Brick(x) )      
 
     def setKeyEvents(self):
         win = self.ui.window
@@ -66,7 +62,6 @@ class Game:
    
     def Refresh(self, object ):
         object.refresh(self.deltaTime)
-        # return type(object)
 
     def Update(self):
 
@@ -74,6 +69,15 @@ class Game:
             self.tick()
             self.Refresh(self.arrow)
             list( map(self.Refresh, self.balls) )
+            list( map(Brick.refresh, self.bricks) )
+            # list( map(Ball.checkCollision, self.balls, self.bricks) )
+
+            for ball in self.balls:
+                for brick in self.bricks:
+                    event = ball.checkCollision(brick)
+                    if event: break
+
+
             self.ui.window.update()
 
     def Quit(self):
@@ -115,19 +119,18 @@ class UI:
             line = []
             for j in range(6):
                 p = turtle.Vec2D( (UI.SCREEN_WIDTH+5)*(j-3)/6 + Brick.size[0]/2  , ( UI.SCREEN_HEIGHT + 25) *(4.5-i)/9 )
-                print(p)
                 line.append(p)
-                # print(i,j)
             sq.append(line)
 
-        # print(len(sq))
-        # print(len(sq[0]))
-
     def importTextures(self):
-        soccerball = "ball.gif"
+        soccerball = Shape.soccerball
         win = self.window
-        win.addshape("ball.gif")
+        win.addshape(soccerball)
 
+        # Not going to be used for now
+        # brick = Shape.brick
+        # win.addshape(brick)
+        
     def drawScreenUI(self):
         self.pen.write("Yet Another Brickbreaker Game!",font= ('Arial', 20) )
 
@@ -137,3 +140,4 @@ class UI:
 game = Game()
 print("Started Game ^^")
 game.ui.window.mainloop()
+

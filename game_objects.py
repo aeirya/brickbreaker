@@ -2,7 +2,7 @@
 from vector import Vector
 
 from gamemanager import GameManager as gm
-from gamemanager import UI
+from gamemanager import UI, Shape
 
 import turtle
 from turtle import Vec2D
@@ -89,25 +89,11 @@ class GameObject:
             self.location = Vector(initialLocation).toVec2D()
         else:
             self.location = initialLocation
-        
-        # self.object = turtle.Turtle()
-        # self.object.up()
-
 
         global turtleInstance
-        # self.object.goto(self.location.tupple())
-        # print( turtleInstance.position())
-        # print(self.location)
         if turtleInstance.position() != self.location:
             turtleInstance.goto(self.location)
-            # print("going")
-            # print("going")
         self.object = turtleInstance.clone()
-        # turtle
-
-        # self.object.hideturtle()
-        # self.object.left(vector.angle())
-
 
 class Ball(GameObject):
     # RADIUS = 10
@@ -119,24 +105,27 @@ class Ball(GameObject):
         super().__init__(initialLocation, vector )
         
         self.draw()
-        self.velocity = vector * self.speed
-
-        # self.object
+        self.changeDirection(vector)
 
         self.object.left(vector.angle())
         if t!=0:
             self.object.hideturtle()
         self.t = t
+
+    def changeDirection(self, vector):
+        self.direction = vector
+        self.velocity = vector * self.speed
+
+    def generatePoints(self):
+        r = self.RADIUS
+        points = [ (-r,0), (r,0), (0,r) , (0,-r) ]
+        for i in range(len(points)):
+            points[i] += self.location
+        
         
     def draw(self, fill = False):
         ted = self.object
-        # ted.turtlesize(0.7,0.7)
-        # ted.pensize(2)
-
-        # ted.shape("circle")
-        # ted.up()
-        # ted.down()
-        ted.shape(UI.soccerball)
+        ted.shape(Shape.soccerball)
         ted.showturtle()
     
     def refresh(self, deltaTime):
@@ -144,40 +133,53 @@ class Ball(GameObject):
             self.t-= deltaTime
             if self.t <= 0:
                 self.object.showturtle()
-        # print(self.t)
-        if self.t <= 0: self.move(deltaTime)
+        if self.t <= 0: 
+            self.move(deltaTime)
+            # self.Points = self.generatePoints()
 
     def move(self, deltaTime):
-        # fill = True
-        # self.object.clear()
-        # if fill: self.object.begin_fill()
-        self.object.forward(self.speed * deltaTime)
-        # self.object.circle(self.RADIUS)
-        # if fill: self.object.end_fill()
+        # self.object.forward(self.speed * deltaTime)
+        displacement = (self.velocity * deltaTime).toVec2D()
+        self.location += displacement
+        self.object.goto( self.location )
         
-    def checkCollision( rect ):
-        pass
+    def checkCollision(self, rect ):
+        # print(self.object.pos())
+        collision = False
+        d = self.direction
+        p = rect.Points
+        if p[0].y < d.y < p[1].y:
+            if d.x > 0 :
+                #check brick from left
+                pass
+
+        b,a = p[1],p[2]
+        
+        print(a.x,b.x, self.object.pos()[0])
+
+        if a.x < d.x < b.x:
+            if d.y > 0: #check from bottom
+                # print("yaaaay")
+                if abs( self.object.pos()[1] + self.velocity.y * 1/gm.FRAMERATE - p[-1].y ) <= self.RADIUS + rect.size[1]/2:
+                    self.changeDirection( Vector(d.x , -d.y) )
+                    collision = True
+                    # print("changing direciton")
+        return collision
 
 class Rect(GameObject):
     def __init__(self, initialLocation ,size):
         super().__init__(initialLocation)
-        # pen = self.object
-        # pen.shape("square")
         self.size = size
-        # pen.turtlesize(w,l)
-        # pen.showturtle()
         self.draw()
       
 
     def draw(self):
         pen = self.object
-        # print("pen is at", pen.pos())
         center = Vector(pen.pos()[0], pen.pos()[1])
         w,l = self.size
-        Points = [ Vector( w/2, -l/2 ), Vector( -w/2, -l/2 ),
-         Vector( -w/2, l/2 ) , Vector ( w/2, l/2 ) ]
-        for i in range(len(Points)):
-            Points[i] += center
+        Points = [ (w,l) , (w,-l) , (-w,-l) , (-w,l), (0,0) ]
+        for i,v in enumerate(Points):
+            Points[i] = Vector(v)/2 + center
 
         # pen.speed(0)
         pen.forward(w/2)
@@ -186,30 +188,45 @@ class Rect(GameObject):
         pen.begin_fill()
         pen.pensize(3)
 
-        for p in Points:
+        for p in Points[:-1]:
             pen.goto(p.tupple())
 
         pen.goto(Points[0].tupple())
 
-        pen.end_fill()
-
+        pen.end_fill() 
+        pen.up()
+        pen.goto(center.toVec2D() + (-5,-10))
         self.Points = Points
 
 
 class Brick(Rect):
+
     size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
+    health = 0
+    isDamaged = True
 
     def __init__(self, initialLocation = Vec2D(0,0) ):  
         super().__init__(initialLocation, self.size)
+        self.spawn(1)
 
     def refresh(self):
-        pass
+        if self.isDamaged:
+            hFont = ('Arial', 22)
+            if self.health != 0:
+                self.object.undo()
+                self.object.write(self.health, font = (hFont) )
+                self.isDamaged = False
+            else:
+                self.object.clear()
         #update health
         #show health / destroy
 
+    def spawn(self, intitHealth):
+        self.health = intitHealth
+        self.object.dot()
+
 class Wall(Rect):
     pass
-
 
 turtleInstance = turtle.Turtle()
 turtleInstance.hideturtle()

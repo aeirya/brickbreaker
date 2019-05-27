@@ -38,9 +38,12 @@ class Vector:
     
     def __mul__(self, x):
         return __class__(x* self.x, x* self.y)
-        
+    
+    def __truediv__(self, x):
+        return  self * (1/x)
+
     def __str__(self):
-        return str(self.r)
+        return str(self.r())
 
     def tupple(self):
         return self.x, self.y
