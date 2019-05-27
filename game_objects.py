@@ -30,6 +30,32 @@ class Arrow:
         self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT * (0.75+0.5)/2))
         self.turtle = turtle.Turtle()
         self.draw()
+        self.initDotter()
+
+    def initDotter(self):
+        from turtle import Turtle
+        dotter = Turtle()
+        dotter.up()
+        dotter.setpos( self.turtle.pos() )
+        dotter.shape("square")
+        dotter.shapesize( 0.14, 0.6 , 0.2)
+
+        self.dotter = dotter
+        self.drawLine()
+        
+    def drawLine(self):
+        self.dotter.goto( self.turtle.pos() )
+        self.dotter.setheading( self.angle )
+        self.dotter.forward(25)
+
+        from math import sin, radians
+        formula = lambda angle , a, b: a + int ( b * (sin(radians(angle))) )
+        f = lambda angle: formula( 2*angle, 15, 5 )
+        n = f( self.angle ) if self.angle <= 90 else f( abs( 180 - self.angle ) )
+
+        for i in range ( n ):
+            self.dotter.forward(25)
+            self.dotter.stamp()
 
     def draw(self):
         ted = self.turtle
@@ -54,7 +80,7 @@ class Arrow:
         from math import cos,sin
         deltaTeta = i* self.angV * deltaTime
 
-        if not 0 <= self.angle + deltaTeta <= 180:
+        if not 0 < self.angle + deltaTeta < 180:
             return
         self.angle += deltaTeta
 
@@ -72,6 +98,9 @@ class Arrow:
     def stopTilting(self):
         # if self.T != 0:
         self.tiltDirection = Direction.NONE
+
+        self.dotter.clear()
+        self.drawLine()
 
     def tiltLeft(self):
         self.tiltDirection = Direction.Left

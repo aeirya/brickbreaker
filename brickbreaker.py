@@ -40,18 +40,18 @@ class Game:
 
     def InitializeUI(self):
         self.arrow = Arrow()
-
-        # for i in range(1):
-        #     for x in self.ui.squares[i]:
-        #         self.bricks.append( Brick(x) )      
-        
-        # for i in range(3,6):
-        #     self.bricks.append( Brick( self.ui.squares[i][-1]  ) )
-        #     self.bricks.append( Brick( self.ui.squares[i][0]))
-
-        # self.bricks.append( Brick( self.ui.squares[3][-2]))
-
         self.generateBricks()
+
+    def _testScenario(self):
+        for i in range(1,5,3):
+            for x in self.ui.squares[i]:
+                self.bricks.append( Brick(x) )      
+        
+        for i in range(3,6):
+            self.bricks.append( Brick( self.ui.squares[i][-1]  ) )
+            self.bricks.append( Brick( self.ui.squares[i][0]))
+
+        self.bricks.append( Brick( self.ui.squares[3][-2]))
 
     def setKeyEvents(self):
         win = self.ui.window

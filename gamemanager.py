@@ -1,7 +1,7 @@
 class GameManager:
     #Game Object Consts.
     BALL_VELOCITY = 10
-    ARROW_VELOCITY = 2.5
+    ARROW_VELOCITY = 2.2
     # BALL_RADIUS = 10
     BALL_RADIUS = 17
     #Video Setttings
