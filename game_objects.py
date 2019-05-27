@@ -265,17 +265,18 @@ class Rect(GameObject):
         pen.forward(w/2)
         pen.down()
         pen.fillcolor('brown')
-        pen.begin_fill()
         pen.pensize(3)
+        pen.begin_fill()
 
         for p in Points[:-1]:
             pen.goto(p.tupple())
-
+        
         pen.goto(Points[0].tupple())
 
         pen.end_fill() 
         pen.up()
         pen.goto(center.toVec2D() + (-5,-10))
+        
         self.Points = Points
 
 class Brick(Rect):
@@ -295,9 +296,13 @@ class Brick(Rect):
         if self.health != 0:
             self.object.undo()
             self.object.write(self.health, font = (hFont) )
-            self.isDamaged = False
+            # self.isDamaged = False
         else:
-            self.object.clear()
+            # self.object.clear()
+            while( self.object.undobufferentries() ):
+                self.object.undo()
+            pass
+            # del self.object
             
         #update health
         #show health / destroy
@@ -312,6 +317,10 @@ class Brick(Rect):
         self.refresh()
 
     def __del__(self):
+        # self.object")
+        self.object.hideturtle() #issue!
+        del self.object
+
         pass
 
 class Wall(Rect):
