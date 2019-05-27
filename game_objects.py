@@ -9,6 +9,7 @@ from turtle import Vec2D
 
 class Direction:
     Left, Right, NONE = 1,-1,0
+    Horizontal, Vertical = "y", "x"
 
 class Arrow:
     RADIUS : int = 30 
@@ -107,7 +108,7 @@ class Ball(GameObject):
         self.draw()
         self.changeDirection(vector)
 
-        self.object.left(vector.angle())
+        # self.object.left(vector.angle())
         if t!=0:
             self.object.hideturtle()
         self.t = t
@@ -116,17 +117,18 @@ class Ball(GameObject):
         self.direction = vector
         self.velocity = vector * self.speed
 
-    def generatePoints(self):
-        r = self.RADIUS
-        points = [ (-r,0), (r,0), (0,r) , (0,-r) ]
-        for i in range(len(points)):
-            points[i] += self.location
-        
+    # def generatePoints(self):
+    #     r = self.RADIUS
+    #     points = [ (-r,0), (r,0), (0,r) , (0,-r) ]
+    #     for i in range(len(points)):
+    #         points[i] += self.location
         
     def draw(self, fill = False):
         ted = self.object
         ted.shape(Shape.soccerball)
+
         ted.showturtle()
+        # ted.down() #
     
     def refresh(self, deltaTime):
         if self.t > 0: 
@@ -142,36 +144,66 @@ class Ball(GameObject):
         displacement = (self.velocity * deltaTime).toVec2D()
         self.location += displacement
         self.object.goto( self.location )
-        
-    def checkCollision(self, rect ):
-        # print(self.object.pos())
-        collision = False
-        d = self.direction
+
+    def collides(self, rect ):
         p = rect.Points
-        if p[0].y < d.y < p[1].y:
-            if d.x > 0 :
-                #check brick from left
-                pass
+        direction = self.direction
+        displacement =  self.velocity / gm.FRAMERATE
+        # displacement = Vector(0,0)
+        location = Vector(self.location)
+        size = Vector(rect.size)
 
-        b,a = p[1],p[2]
+        def calc(p1,p2, radius, location, displacement, size, direction):
+            
+            f = lambda a : a.getX()
+            g = lambda a : a.getY()
+
+            if direction == Direction.Vertical: 
+                f,g = g,f
+                
+            # print( f(p1),f(location), f(p2), "is it true?")
+            # print(f(location))
+            if f(p1) <= f(location) <= f(p2):
+                # print("TRUE")
+                # print(radius - abs( g(location) - g(p1) + g(displacement) ))
+                # print(g(location), g(p1))
+                if abs( g(location) - g(p1) + g(displacement) ) <= radius: # + g(size)/2:
+                    return True
+            return False
+
+        checkCollision = lambda p1,p2,direction : calc(p1,p2, self.RADIUS, location, displacement, size, direction)
         
-        print(a.x,b.x, self.object.pos()[0])
+        def check(p1,p2,d):
+            if checkCollision(p1,p2,d): self.reflect(d)
+        
+        h = Direction.Horizontal
+        v = Direction.Vertical
 
-        if a.x < d.x < b.x:
-            if d.y > 0: #check from bottom
-                # print("yaaaay")
-                if abs( self.object.pos()[1] + self.velocity.y * 1/gm.FRAMERATE - p[-1].y ) <= self.RADIUS + rect.size[1]/2:
-                    self.changeDirection( Vector(d.x , -d.y) )
-                    collision = True
-                    # print("changing direciton")
-        return collision
+        collision = check(p[2], p[1], h)  or check(p[3], p[0], h) or check(p[1], p[0], v) or check(p[2],p[3],v)
+        
+        checkEdge = lambda p, center, radius: (p-center).size() < radius
+        checkCollisionOnEdge = lambda p: checkEdge(p, Vector(self.location), self.RADIUS)
+        
+        collision2 = sum( list( map( checkCollisionOnEdge, p[:-1] ) ) ) > 0
+        
+        if collision2: 
+            pass
+            
+        return collision or collision2
+
+    def reflect(self, c):
+        d = self.direction 
+        if c == Direction.Horizontal:
+            self.changeDirection(Vector( d.x , -d.y ))
+        else:
+            self.changeDirection(Vector( -d.x, d.y ))
+        # print("reflecting on",c)
 
 class Rect(GameObject):
     def __init__(self, initialLocation ,size):
         super().__init__(initialLocation)
         self.size = size
         self.draw()
-      
 
     def draw(self):
         pen = self.object
@@ -198,6 +230,8 @@ class Rect(GameObject):
         pen.goto(center.toVec2D() + (-5,-10))
         self.Points = Points
 
+    # def checkHorizontalCollision(self, ball):
+        
 
 class Brick(Rect):
 
@@ -228,6 +262,10 @@ class Brick(Rect):
 class Wall(Rect):
     pass
 
+
+
+
 turtleInstance = turtle.Turtle()
 turtleInstance.hideturtle()
 turtleInstance.up()
+

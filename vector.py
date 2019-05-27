@@ -7,6 +7,12 @@ class Vector:
         self.x = x
         self.y = y
         
+    def getX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
+
     def r(self):
         return (self.x, self.y)
 
@@ -36,6 +42,9 @@ class Vector:
     def __add__(self, v):
         return __class__(self.x + v.x, self.y + v.y)
     
+    def __sub__(self, v):
+        return self + v*-1
+
     def __mul__(self, x):
         return __class__(x* self.x, x* self.y)
     

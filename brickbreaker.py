@@ -35,6 +35,12 @@ class Game:
         for i in range(1):
             for x in self.ui.squares[i]:
                 self.bricks.append( Brick(x) )      
+        
+        for i in range(3,6):
+            self.bricks.append( Brick( self.ui.squares[i][-1]  ) )
+            self.bricks.append( Brick( self.ui.squares[i][0]))
+
+        self.bricks.append( Brick( self.ui.squares[3][-2]))
 
     def setKeyEvents(self):
         win = self.ui.window
@@ -73,10 +79,13 @@ class Game:
             # list( map(Ball.checkCollision, self.balls, self.bricks) )
 
             for ball in self.balls:
-                for brick in self.bricks:
-                    event = ball.checkCollision(brick)
+                # for brick in self.bricks:
+                for i,brick in enumerate(self.bricks):
+                    # print(i)
+                    event = ball.collides(brick)
                     if event: break
 
+            # time.sleep(0.001)
 
             self.ui.window.update()
 
