@@ -40,8 +40,9 @@ class Game:
 
     def InitializeUI(self):
         self.arrow = Arrow()
-        self.generateBricks()
-
+        # self.generateBricks()
+        self._testScenario()
+        
     def _testScenario(self):
         for i in range(1,5,3):
             for x in self.ui.squares[i]:
