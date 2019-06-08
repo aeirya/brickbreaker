@@ -9,8 +9,9 @@ class GameManager:
     # Screen_Size = (X,Y)
 
 class UI:
-    SCREEN_WIDTH, SCREEN_HEIGHT = 600, 450
-
+    # SCREEN_WIDTH, SCREEN_HEIGHT = 600, 450
+    x = 80
+    SCREEN_WIDTH, SCREEN_HEIGHT = 12 * x, 9 * x
 class Shape:
     soccerball = "Textures/ball.gif"
     # brick = "brick.gif"

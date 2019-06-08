@@ -7,7 +7,7 @@ import threading
 
 #import my own classes
 from vector import Vector
-from game_objects import Arrow, Brick, Wall, Ball
+from game_objects import Arrow, Brick, Wall, Ball, Direction
 from gamemanager import GameManager, Shape
 import gamemanager
 
@@ -41,18 +41,33 @@ class Game:
     def InitializeUI(self):
         self.arrow = Arrow()
         # self.generateBricks()
+        self.setupWalls()
+
         self._testScenario()
         
+        # print(self.arrow.pivotPoint)
+        
+    def setupWalls(self):
+        points = [ (1,0), (-1,0) , (0,1), (0,-1) ]
+        w,h = UI.SCREEN_WIDTH/2 * Wall.a , UI.SCREEN_HEIGHT/2 * Wall.b
+
+        points = list( map( lambda x: (x[0]*w, x[1]*h), points ) )
+        self.walls = [ Wall(p, Direction.Horizontal if p[0]==0.0 else Direction.Vertical) for p in points ]
+
+    def addBrick(self, X, initialHealth = 1 ):
+        self.bricks.append( Brick( self.ui.squares[X[0]][X[1]] , initialHealth ) )
+
     def _testScenario(self):
         for i in range(1,5,3):
             for x in self.ui.squares[i]:
                 self.bricks.append( Brick(x) )      
         
-        for i in range(3,6):
-            self.bricks.append( Brick( self.ui.squares[i][-1]  ) )
+        for i in range(3,6, 2):
+            self.bricks.append( Brick( self.ui.squares[i][-1] , 3 ) )
             self.bricks.append( Brick( self.ui.squares[i][0]))
 
-        self.bricks.append( Brick( self.ui.squares[3][-2]))
+        self.addBrick( (7,5) , 2 )
+        # self.bricks.append( Brick( self.ui.squares[3][-2]))
 
     def setKeyEvents(self):
         win = self.ui.window
@@ -62,7 +77,17 @@ class Game:
         win.onkeyrelease(self.arrow.stopTilting, "Right")
         win.onkeypress(self.shoot, "space")
         win.onkeypress(self.Quit, "q")
-
+        win.onkeypress(self.arrow.drawLine, 'v')
+        # win.onkeyrelease(self.arrow.clearDotter, 'v')
+        '''
+        t = turtle.Turtle()
+        def hello(x,y):
+            print( x,y )
+        t.shape("circle")
+        t.shapesize(10,10)
+        t.ondrag( hello )
+        # print(x)
+        '''
     def shoot(self):
         arrow = self.arrow
         direction = Vector.i(arrow.angle)
@@ -90,7 +115,15 @@ class Game:
             # list( map(Brick.refresh, self.bricks) )
             # list( map(Ball.checkCollision, self.balls, self.bricks) )
 
-            for ball in self.balls:
+            for ballID, ball in enumerate( self.balls ):
+                l = list( map(ball.collides, self.walls) )
+                
+                if l[3] == True: #Hit the floor
+                    ball.destroy()
+                    del self.balls[ballID]
+                
+                if True in l: continue #No need to check bricks
+
                 for i, brick in enumerate( self.bricks ) :
                     event = ball.collides(brick)
                     if event: 
@@ -101,7 +134,10 @@ class Game:
 
             # time.sleep(0.01)
             self.ui.window.update()
-
+            
+            # t = turtle.Turtle()
+            # print( t.screen.cv.winfo_pointerx() - self.arrow.MouseZeroX )
+        
     def Quit(self):
         print("BYE!")
         self.ui.window.bye()
@@ -159,7 +195,13 @@ class UI:
     def refresh(self):
         pass
 
+def help():
+    print("You can play using left and right arrows\n"+
+        "Press Space to shoot\n"+
+        "Press V for aim assitance\n"+
+        "Press Q to exit the game (don't! :( )"
+        )
 game = Game()
 print("Started Game ^^")
+help()
 game.ui.window.mainloop()
-

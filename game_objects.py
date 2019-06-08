@@ -18,44 +18,50 @@ class Arrow:
     tilter = None
     isTilting = False
     length = 2
-    T = 0
 
     def __init__(self):
         super().__init__()
-
-        # from brickbreaker import UI
-        import turtle
+        from turtle import Turtle
         self.angV = gm.ARROW_VELOCITY * gm.FRAMERATE
-
         self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT * (0.75+0.5)/2))
-        self.turtle = turtle.Turtle()
+        self.turtle = Turtle()
         self.draw()
-        self.initDotter()
+        self.initDotter() 
+        
+        # self.MouseZeroX, self.MouseZeroY = self.turtle.screen.cv.winfo_pointerx(), self.turtle.screen.cv.winfo_pointery()
 
     def initDotter(self):
+        self.isDotterOn = False
         from turtle import Turtle
         dotter = Turtle()
         dotter.up()
         dotter.setpos( self.turtle.pos() )
         dotter.shape("square")
         dotter.shapesize( 0.14, 0.6 , 0.2)
-
+ 
         self.dotter = dotter
-        self.drawLine()
+        # self.drawLine()
+        self.dotter.ht()
         
     def drawLine(self):
+        self.clearDotter()
+        self.isDotterOn = True
         self.dotter.goto( self.turtle.pos() )
         self.dotter.setheading( self.angle )
         self.dotter.forward(25)
 
         from math import sin, radians
         formula = lambda angle , a, b: a + int ( b * (sin(radians(angle))) )
-        f = lambda angle: formula( 2*angle, 15, 5 )
+        f = lambda angle: formula( 2*angle, 20, 5 )
         n = f( self.angle ) if self.angle <= 90 else f( abs( 180 - self.angle ) )
 
         for i in range ( n ):
             self.dotter.forward(25)
             self.dotter.stamp()
+
+    def clearDotter(self):
+        self.isDotterOn = False
+        self.dotter.clear()
 
     def draw(self):
         ted = self.turtle
@@ -71,11 +77,23 @@ class Arrow:
         
     def refresh(self, deltaTime):
         self.tilt(deltaTime)
-        # print(self.T)
-
+        if self.tiltDirection != Direction.NONE:
+            # self.dotter.clear()
+            # try:
+            #     self.dotter.clearstamps()
+            # except:
+            #     pass
+            # while self.dotter.undobufferentries():
+            #     self.dotter.undo()
+            # self.drawLine()
+            pass
+ 
     def tilt(self, deltaTime):
         i = self.tiltDirection
         if i == Direction.NONE: return
+
+        if self.isDotterOn:
+            self.clearDotter()
 
         from math import cos,sin
         deltaTeta = i* self.angV * deltaTime
@@ -88,32 +106,21 @@ class Arrow:
         ted.goto( (Vector.tuppleInit(self.pivotPoint) + Vector.polarInit(self.RADIUS, self.angle)).tupple() ) 
         ted.tilt( deltaTeta )
 
-    # def startTilting(self):     
-    #     self.T += self.tiltDirection
-
-        # x = self.T
-        # if abs(x)>1:
-        #     self.T = abs(x)/x
-
     def stopTilting(self):
-        # if self.T != 0:
         self.tiltDirection = Direction.NONE
 
-        self.dotter.clear()
-        self.drawLine()
+        # self.dotter.clear()
+        # self.drawLine()
 
     def tiltLeft(self):
         self.tiltDirection = Direction.Left
-        # self.startTilting()
 
     def tiltRight(self):
         self.tiltDirection = Direction.Right
-        # self.startTilting()
 
 class GameObject:
 
     Points = [] * 4
-
     def __init__(self, initialLocation=Vec2D(0,0), vector= Vector(0,0) ):
         if type(initialLocation) == type(tuple()):
             self.location = Vector(initialLocation).toVec2D()
@@ -126,9 +133,8 @@ class GameObject:
         self.object = turtleInstance.clone()
 
 class Ball(GameObject):
-    # RADIUS = 10
+
     RADIUS = gm.BALL_RADIUS
-    # speed = 10 #* FRAMERATE
     speed = gm.BALL_VELOCITY * gm.FRAMERATE
 
     def __init__(self, initialLocation = Vec2D(0,0), vector = Vector(0,0), t : int = 0):
@@ -136,7 +142,6 @@ class Ball(GameObject):
         
         self.draw()
         self.changeDirection(vector)
-
         # self.object.left(vector.angle())
         if t!=0:
             self.object.hideturtle()
@@ -155,9 +160,7 @@ class Ball(GameObject):
     def draw(self, fill = False):
         ted = self.object
         ted.shape(Shape.soccerball)
-
         ted.showturtle()
-        # ted.down() #
     
     def refresh(self, deltaTime):
         if self.t > 0: 
@@ -169,7 +172,6 @@ class Ball(GameObject):
             # self.Points = self.generatePoints()
 
     def move(self, deltaTime):
-        # self.object.forward(self.speed * deltaTime)
         displacement = (self.velocity * deltaTime).toVec2D()
         self.location += displacement
         self.object.goto( self.location )
@@ -177,8 +179,8 @@ class Ball(GameObject):
     def collides(self, rect ):
         p = rect.Points
         direction = self.direction
-        # displacement =  self.velocity / gm.FRAMERATE
-        displacement = Vector(0,0)
+        displacement =  self.velocity / gm.FRAMERATE
+        # displacement = Vector(0,0)
         location = Vector(self.location)
         size = Vector(rect.size)
 
@@ -189,13 +191,8 @@ class Ball(GameObject):
 
             if direction == Direction.Vertical: 
                 f,g = g,f
-                
-            # print( f(p1),f(location), f(p2), "is it true?")
-            # print(f(location))
+            
             if f(p1) <= f(location) <= f(p2):
-                # print("TRUE")
-                # print(radius - abs( g(location) - g(p1) + g(displacement) ))
-                # print(g(location), g(p1))
                 if abs( g(location) - g(p1) + g(displacement) ) <= radius: # + g(size)/2:
                     return True
             return False
@@ -218,7 +215,12 @@ class Ball(GameObject):
         
         collision = sum( list( map( checkCollisionOnEdge, p[:-1] ) ) ) > 0
         if collision:
-            list( map( self.reflect, [Direction.Vertical, Direction.Horizontal] ) )
+            # list( map( self.reflect, [Direction.Vertical, Direction.Horizontal] ) )
+            x,y = self.location
+            if not p[1].y <= y <= p[0].y:
+                self.reflect(Direction.Horizontal)
+            if not p[1].x <= x <= p[0].x:
+                self.reflect(Direction.Vertical)
 
         '''
         collision2 = False
@@ -237,6 +239,7 @@ class Ball(GameObject):
                 break
         if collision2 : print("yaaay")
         '''    
+
         return collision
 
     def reflect(self, c):
@@ -245,7 +248,12 @@ class Ball(GameObject):
             self.changeDirection(Vector( d.x , -d.y ))
         else:
             self.changeDirection(Vector( -d.x, d.y ))
-        # print("reflecting on",c)
+
+    def destroy(self):
+        self.object.clear()
+        self.object.hideturtle()
+        # print("bye bye!")
+        
 
 class Rect(GameObject):
     def __init__(self, initialLocation ,size):
@@ -260,7 +268,6 @@ class Rect(GameObject):
         Points = [ (w,l) , (w,-l) , (-w,-l) , (-w,l), (0,0) ]
         for i,v in enumerate(Points):
             Points[i] = Vector(v)/2 + center
-
         # pen.speed(0)
         pen.forward(w/2)
         pen.down()
@@ -283,7 +290,6 @@ class Brick(Rect):
 
     size = UI.SCREEN_WIDTH/6, UI.SCREEN_HEIGHT/9
     health = 0
-    # isDamaged = True
 
     def __init__(self, initialLocation = Vec2D(0,0), initialHealth = 1 ):  
         super().__init__(initialLocation, self.size)
@@ -291,40 +297,44 @@ class Brick(Rect):
         self.refresh()
 
     def refresh(self):
-        # if self.isDamaged:
         hFont = ('Arial', 22)
-        if self.health != 0:
+        if self.health > 0:
             self.object.undo()
             self.object.write(self.health, font = (hFont) )
-            # self.isDamaged = False
         else:
-            # self.object.clear()
             while( self.object.undobufferentries() ):
                 self.object.undo()
+            self.object.clear()
+            # self.object.reset()
             pass
-            # del self.object
             
-        #update health
-        #show health / destroy
-
     def spawn(self, intitHealth):
         self.health = intitHealth
         self.object.dot() #to cancel out the undo()
 
     def loseHealth(self):
         self.health -= 1
-        # print("losing health")
         self.refresh()
 
     def __del__(self):
-        # self.object")
         self.object.hideturtle() #issue!
         del self.object
 
-        pass
-
 class Wall(Rect):
-    pass
+    # size = UI.SCREEN_WIDTH, UI.SCREEN_HEIGHT
+    border = UI.SCREEN_WIDTH/100
+    a,b = 1.4, 1.4
+    def __init__(self, initialLocation = Vec2D(0,0) , direction = Direction.Vertical ):  
+        #code needs to be refined here
+        # print(initialLocation[0])
+        # if initialLocation[0] == 0.0: 
+        #     direction == Direction.Horizontal
+        if direction == Direction.Vertical:
+            self.size = self.border, UI.SCREEN_HEIGHT * self.b
+        else:
+            self.size = UI.SCREEN_WIDTH * self.a , self.border 
+        super().__init__(initialLocation, self.size)
+
 
 turtleInstance = turtle.Turtle()
 turtleInstance.hideturtle()

@@ -1,0 +1,15 @@
+1. Dislocate classes from each other #
+2. Change from Recursive to While (True) #
+3. Import textures #Bricks to be added (ask noobofsky)
+4. Clean the code #Need to do it again though
+5. Write the bounce function #done!
+6. Remove delta time , for now #remade it ^^ 
+7. Use funcitonal Programming #can't do
+#easy ^^
+
+1. Add mouse onDrag
+2. Add main menu
+3. Add levels
+4. Make dotter smarter
+5. Add the shooting thing
+6. Add the function that pulls bricks 
