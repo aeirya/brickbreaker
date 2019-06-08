@@ -132,6 +132,14 @@ class GameObject:
             turtleInstance.goto(self.location)
         self.object = turtleInstance.clone()
 
+    def destroy(self):
+        # print("I was awakened")
+        self.object.clear()
+        self.object.hideturtle() #issue!
+        # del self.object 
+    def __del__(self):
+        self.destroy()
+
 class Ball(GameObject):
 
     RADIUS = gm.BALL_RADIUS
@@ -249,11 +257,12 @@ class Ball(GameObject):
         else:
             self.changeDirection(Vector( -d.x, d.y ))
 
-    def destroy(self):
-        self.object.clear()
-        self.object.hideturtle()
-        # print("bye bye!")
-        
+    # def destroy(self):
+    #     self.object.clear()
+    #     self.object.hideturtle()
+    #     # print("bye bye!")
+    # def __del__(self):
+    #     self.destroy()
 
 class Rect(GameObject):
     def __init__(self, initialLocation ,size):
@@ -316,10 +325,9 @@ class Brick(Rect):
         self.health -= 1
         self.refresh()
 
-    def __del__(self):
-        self.object.hideturtle() #issue!
-        del self.object
-
+    # def __del__(self):
+    #     self.destroy()
+        
 class Wall(Rect):
     # size = UI.SCREEN_WIDTH, UI.SCREEN_HEIGHT
     border = UI.SCREEN_WIDTH/100

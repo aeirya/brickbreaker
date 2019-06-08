@@ -1,6 +1,6 @@
 class GameManager:
     #Game Object Consts.
-    BALL_VELOCITY = 10
+    BALL_VELOCITY = 12.5
     ARROW_VELOCITY = 2.2
     # BALL_RADIUS = 10
     BALL_RADIUS = 17
@@ -15,3 +15,7 @@ class UI:
 class Shape:
     soccerball = "Textures/ball.gif"
     # brick = "brick.gif"
+
+class Mode:
+    Classic = 0
+    Chaos = 1

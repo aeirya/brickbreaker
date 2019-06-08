@@ -13,3 +13,5 @@
 4. Make dotter smarter
 5. Add the shooting thing
 6. Add the function that pulls bricks 
+
+0. Add framerate control

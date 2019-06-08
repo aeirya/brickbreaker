@@ -8,7 +8,7 @@ import threading
 #import my own classes
 from vector import Vector
 from game_objects import Arrow, Brick, Wall, Ball, Direction
-from gamemanager import GameManager, Shape
+from gamemanager import GameManager, Shape, Mode
 import gamemanager
 
 class Game:
@@ -16,6 +16,8 @@ class Game:
     bricks = []
     number_of_balls = 1
     level = 2
+    gamemode = Mode.Classic
+    paused = False
 
     def __init__(self):
         super().__init__()
@@ -23,6 +25,12 @@ class Game:
         self.ui = UI()
         self.InitializeUI()
         self.setKeyEvents()
+        
+        self.startGame()
+
+    def startGame(self, mode= Mode.Classic):
+        self.paused = False
+        self.gamemode = mode
 
         updateThread = threading.Timer(0.3, self.Update)
         updateThread.name = "Update Thread"
@@ -37,6 +45,19 @@ class Game:
         n = f( self.level )
         bricks = sample( list(range(6)) , n )
         list( map( self.addBrick, bricks ) )
+    
+    def clearScene(self):
+        def clearList(objects):
+            for i, obj in enumerate(objects):
+                objects[i].destroy()
+                del objects[i]
+        # delList = [ self.walls, self.balls, self.bricks, [self.arrow] ]
+        # self.paused = True
+        delList = [ self.bricks ]
+        # list( map( clearList, delList ) )
+        for queue in delList:
+            clearList(queue)
+        self.ui.window.update()
 
     def InitializeUI(self):
         self.arrow = Arrow()
@@ -78,8 +99,10 @@ class Game:
         win.onkeypress(self.shoot, "space")
         win.onkeypress(self.Quit, "q")
         win.onkeypress(self.arrow.drawLine, 'v')
+        # win.onkeypress( lambda: self.gamemode = Mode.Classic if self.gamemode == Mode.Classic else Mode.Chaos , 's') #Needs to be refined
+        win.onkeypress(self.clearScene, 'w')
         # win.onkeyrelease(self.arrow.clearDotter, 'v')
-        '''
+        ''']
         t = turtle.Turtle()
         def hello(x,y):
             print( x,y )
@@ -107,9 +130,19 @@ class Game:
         object.refresh(self.deltaTime)
 
     def Update(self):
-
+        #Framerate control
+        accumulator = 0
         while True:
             self.tick()
+            accumulator += self.deltaTime
+            if accumulator < 1/UI.FRAMERATE:
+                time.sleep(self.deltaTime) #A little delay may be good
+                continue
+            else: 
+                self.deltaTime = accumulator
+                # print(accumulator)
+                accumulator = 0
+            #Start Updating objects
             self.Refresh(self.arrow)
             list( map(self.Refresh, self.balls) )
             # list( map(Brick.refresh, self.bricks) )
@@ -119,8 +152,10 @@ class Game:
                 l = list( map(ball.collides, self.walls) )
                 
                 if l[3] == True: #Hit the floor
-                    ball.destroy()
-                    del self.balls[ballID]
+                    if self.gamemode == Mode.Classic:
+                        ball.destroy()
+                        del self.balls[ballID]
+                    if self.gamemode == Mode.Chaos: pass
                 
                 if True in l: continue #No need to check bricks
 
@@ -131,10 +166,8 @@ class Game:
                         if brick.health <= 0:
                             del self.bricks[i]
                         break
-
-            # time.sleep(0.01)
             self.ui.window.update()
-            
+            if self.paused: break
             # t = turtle.Turtle()
             # print( t.screen.cv.winfo_pointerx() - self.arrow.MouseZeroX )
         
