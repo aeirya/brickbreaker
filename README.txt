@@ -1,6 +1,6 @@
-ANOTHER BRICKBREAKER GAME
-----------------
-To run the game, enter this command into your terminal:
+BREAKBREAKER
+------------
+to run the game enter the following command:
 $ python3 brickbreaker.py
----------------
-Bubble(C)
+-----------
+Developed by: Bubble (TM)
