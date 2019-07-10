@@ -1,4 +1,3 @@
-# from brickbreaker import Direction
 from vector import Vector
 
 from gamemanager import GameManager as gm
@@ -26,8 +25,7 @@ class Arrow:
         self.pivotPoint = ((0, (-1)*UI.SCREEN_HEIGHT * (0.75+0.5)/2))
         self.turtle = Turtle()
         self.draw()
-        self.initDotter() 
-        
+        self.initDotter()         
         # self.MouseZeroX, self.MouseZeroY = self.turtle.screen.cv.winfo_pointerx(), self.turtle.screen.cv.winfo_pointery()
 
     def initDotter(self):

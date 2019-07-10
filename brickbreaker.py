@@ -8,8 +8,10 @@ import threading
 #import my own classes
 from vector import Vector
 from game_objects import Arrow, Brick, Wall, Ball, Direction
-from gamemanager import GameManager, Shape, Mode
-import gamemanager
+# from gamemanager import GameManager, Shape, Mode
+from gamemanager import Mode
+# import gamemanager
+from UI import UI
 
 class Game:
     balls = []
@@ -61,12 +63,9 @@ class Game:
 
     def InitializeUI(self):
         self.arrow = Arrow()
-        # self.generateBricks()
         self.setupWalls()
 
         self._testScenario()
-        
-        # print(self.arrow.pivotPoint)
         
     def setupWalls(self):
         points = [ (1,0), (-1,0) , (0,1), (0,-1) ]
@@ -99,18 +98,8 @@ class Game:
         win.onkeypress(self.shoot, "space")
         win.onkeypress(self.Quit, "q")
         win.onkeypress(self.arrow.drawLine, 'v')
-        # win.onkeypress( lambda: self.gamemode = Mode.Classic if self.gamemode == Mode.Classic else Mode.Chaos , 's') #Needs to be refined
         win.onkeypress(self.clearScene, 'w')
-        # win.onkeyrelease(self.arrow.clearDotter, 'v')
-        ''']
-        t = turtle.Turtle()
-        def hello(x,y):
-            print( x,y )
-        t.shape("circle")
-        t.shapesize(10,10)
-        t.ondrag( hello )
-        # print(x)
-        '''
+
     def shoot(self):
         arrow = self.arrow
         direction = Vector.i(arrow.angle)
@@ -136,12 +125,12 @@ class Game:
             self.tick()
             accumulator += self.deltaTime
             if accumulator < 1/UI.FRAMERATE:
-                time.sleep(self.deltaTime) #A little delay may be good
+                # time.sleep(self.deltaTime) #A little delay may be good
                 continue
             else: 
                 self.deltaTime = accumulator
-                # print(accumulator)
                 accumulator = 0
+
             #Start Updating objects
             self.Refresh(self.arrow)
             list( map(self.Refresh, self.balls) )
@@ -153,7 +142,7 @@ class Game:
                 
                 if l[3] == True: #Hit the floor
                     if self.gamemode == Mode.Classic:
-                        ball.destroy()
+                        # fball.destroy()
                         del self.balls[ballID]
                     if self.gamemode == Mode.Chaos: pass
                 
@@ -175,58 +164,6 @@ class Game:
         print("BYE!")
         self.ui.window.bye()
         quit(0)
-
-class UI:
-    SCREEN_WIDTH, SCREEN_HEIGHT = gamemanager.UI.SCREEN_WIDTH, gamemanager.UI.SCREEN_HEIGHT
-    FRAMERATE = GameManager.FRAMERATE
-    # SQUARES = (8,4)
-    def __init__(self):
-        super().__init__()
-        from turtle import Screen, Turtle
-        win = Screen()
-        win.tracer(0,0) 
-        win.bgcolor("dark grey")
-        # win.bgcolor("#029ed2")
-        win.title("Another Brick Breaker Game :))")
-        win.setup(self.SCREEN_WIDTH*1.5, self.SCREEN_HEIGHT*1.5) 
-        win.screensize(canvwidth=self.SCREEN_WIDTH, canvheight=self.SCREEN_HEIGHT)
-        win.listen()
-        self.window = win
-        
-        self.pen = Turtle()
-        self.pen.hideturtle()
-        self.pen.pensize(3)
-        self.pen.up()
-        self.pen.goto( -180, self.SCREEN_HEIGHT/4 )
-        self.importTextures()
-        self.drawScreenUI()
-        self.generateSquares()
-
-    # from turtle import Vec2D
-    def generateSquares(self):
-        self.squares = []
-        sq = self.squares
-        for i in range(9):
-            line = []
-            for j in range(6):
-                p = turtle.Vec2D( (UI.SCREEN_WIDTH+5)*(j-3)/6 + Brick.size[0]/2  , ( UI.SCREEN_HEIGHT + 25) *(4.5-i)/9 )
-                line.append(p)
-            sq.append(line)
-
-    def importTextures(self):
-        soccerball = Shape.soccerball
-        win = self.window
-        win.addshape(soccerball)
-
-        # Not going to be used for now
-        # brick = Shape.brick
-        # win.addshape(brick)
-        
-    def drawScreenUI(self):
-        self.pen.write("Yet Another Brickbreaker Game!",font= ('Arial', 20) )
-
-    def refresh(self):
-        pass
 
 def help():
     print("You can play using left and right arrows\n"+
